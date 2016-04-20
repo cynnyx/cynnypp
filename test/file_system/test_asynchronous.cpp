@@ -1,24 +1,22 @@
 #include <iostream>
 #include <boost/filesystem/operations.hpp>
-#include "../../../src/components/file_system/fs_manager_interface.h"
-#include "../../../src/utils/type_definitions.h"
-#include "../../../src/servicelocator/service_locator.h"
+#include <file_system/fs_manager_interface.h>
+#include <file_system/fs_manager.h>
+#include <boost/asio.hpp>
 #include "catch.hpp"
 
-using atlas::Buffer;
-using atlas::components::filesystem::FilesystemManagerInterface;
+using Buffer = std::vector<uint8_t>;
+using namespace cynny::cynnypp::filesystem;
 
-const std::string input_dir = "../test/components/file_system/data";
+const std::string input_dir = "../test/file_system/data";
 const std::string working_dir = "./data";
 
 SCENARIO("Async Read", "[fs_async_read][fs_async][fs]")  {
-    using namespace atlas::components::filesystem;
-    auto& io = atlas::ServiceLocator::getIoService();
-    io.reset();
+    boost::asio::io_service io;
     std::string s1 = "aaaaaaaaaaaaaaaaaaaa\n";
     Buffer r1;
     r1.insert(r1.begin(), s1.begin(), s1.end());
-    auto &fs = atlas::ServiceLocator::getFilesystemManager();
+    FilesystemManager fs(io);
     Buffer output1, output2;
 
     GIVEN("A normal file") {
@@ -40,7 +38,7 @@ SCENARIO("Async Read", "[fs_async_read][fs_async][fs]")  {
 
     GIVEN("A file containing some invisible chars") {
         Buffer r2;
-        for(::atlas::Byte i = 0; i < 39; i++) {r2.push_back(i);}
+        for(uint8_t i = 0; i < 39; i++) {r2.push_back(i);}
         WHEN("Reading from it") {
             fs.async_read(input_dir+"/read/multiplea", output2, [&r2, &output2](const ErrorCode &ec, size_t bytesRead){ //std::function<void(const ErrorCode& ec, size_t bytesRead)>;
                 if(ec) {
@@ -142,19 +140,17 @@ SCENARIO("Async Read", "[fs_async_read][fs_async][fs]")  {
 
 
 SCENARIO("Write asynchronously", "[fs_async_write][fs_async][fs]"){
-    using namespace atlas::components::filesystem;
-    auto& io = atlas::ServiceLocator::getIoService();
-    io.reset();
+    boost::asio::io_service io;
     std::string s1 = "aaaaaaaaaaaaaaaaaaaa\n";
     Buffer r1;
     r1.insert(r1.begin(), s1.begin(), s1.end());
-    auto &fs = atlas::ServiceLocator::getFilesystemManager();
+    FilesystemManager fs(io);
     Buffer input1, input2;
     /* copy of normal file. */
-    atlas::ServiceLocator::getFilesystemManager().removeDirectory(working_dir);
+    fs.removeDirectory(working_dir);
     try{
         //we use the data in read to work on it
-        atlas::ServiceLocator::getFilesystemManager().copyDirectory(input_dir+"/read", working_dir);
+        fs.copyDirectory(input_dir+"/read", working_dir);
     } catch (ErrorCode &exc) {
 
         std::cout << "\033[1;31m====================== ERROR WHILE COPYING =====================\033[0m" << std::endl;
@@ -175,7 +171,7 @@ SCENARIO("Write asynchronously", "[fs_async_write][fs_async][fs]"){
             std::this_thread::sleep_for(std::chrono::milliseconds{100});
             io.run();
             THEN("The content of the file must be exactly the same of the written buffer") {
-                REQUIRE(atlas::ServiceLocator::getFilesystemManager().readFile(working_dir+"/multiplea") == b);
+                REQUIRE(fs.readFile(working_dir+"/multiplea") == b);
             }
         }
 
@@ -191,7 +187,7 @@ SCENARIO("Write asynchronously", "[fs_async_write][fs_async][fs]"){
             std::this_thread::sleep_for(std::chrono::milliseconds{100});
             io.run();
             THEN("The content of the file must correspond to one or the other (no interleaving)") {
-                REQUIRE((atlas::ServiceLocator::getFilesystemManager().readFile(working_dir+"/multiplea") == c || atlas::ServiceLocator::getFilesystemManager().readFile(working_dir+"/multiplea") == b) == true);
+                REQUIRE((fs.readFile(working_dir+"/multiplea") == c || fs.readFile(working_dir+"/multiplea") == b) == true);
             }
         }
     }
@@ -207,9 +203,9 @@ SCENARIO("Write asynchronously", "[fs_async_write][fs_async][fs]"){
             std::this_thread::sleep_for(std::chrono::milliseconds{100});
             io.run();
             THEN("The directory must still exist") {
-                REQUIRE(atlas::ServiceLocator::getFilesystemManager().exists(working_dir+"/dir"));
+                REQUIRE(fs.exists(working_dir+"/dir"));
             } AND_THEN("It must be a directory") {
-                REQUIRE_THROWS(atlas::ServiceLocator::getFilesystemManager().readFile(working_dir+"/dir"));
+                REQUIRE_THROWS(fs.readFile(working_dir+"/dir"));
             }
         }
     }
@@ -244,9 +240,9 @@ SCENARIO("Write asynchronously", "[fs_async_write][fs_async][fs]"){
             std::this_thread::sleep_for(std::chrono::milliseconds{100});
             io.run();
             THEN("The file must exist") {
-                REQUIRE(atlas::ServiceLocator::getFilesystemManager().exists(working_dir+"/newfile.txt"));
+                REQUIRE(fs.exists(working_dir+"/newfile.txt"));
             } AND_THEN("Its content must correspond to the one used for creation") {
-                REQUIRE(atlas::ServiceLocator::getFilesystemManager().readFile(working_dir+"/newfile.txt") == b);
+                REQUIRE(fs.readFile(working_dir+"/newfile.txt") == b);
             }
         }
     }
@@ -270,9 +266,9 @@ SCENARIO("Write asynchronously", "[fs_async_write][fs_async][fs]"){
             std::this_thread::sleep_for(std::chrono::milliseconds{100});
             io.run();
             THEN("The file must exist") {
-                REQUIRE(atlas::ServiceLocator::getFilesystemManager().exists(working_dir+"/prova.txt"));
+                REQUIRE(fs.exists(working_dir+"/prova.txt"));
             } AND_THEN("It must be empty") {
-                REQUIRE(atlas::ServiceLocator::getFilesystemManager().readFile(working_dir+"/prova.txt").size() == 0);
+                REQUIRE(fs.readFile(working_dir+"/prova.txt").size() == 0);
             }
         }
 
@@ -285,9 +281,9 @@ SCENARIO("Write asynchronously", "[fs_async_write][fs_async][fs]"){
             std::this_thread::sleep_for(std::chrono::milliseconds{100});
            io.run();
             THEN("It must exist") {
-                REQUIRE(atlas::ServiceLocator::getFilesystemManager().exists(working_dir+"/newfile2.txt"));
+                REQUIRE(fs.exists(working_dir+"/newfile2.txt"));
             } AND_THEN("It must be empty") {
-                REQUIRE(atlas::ServiceLocator::getFilesystemManager().readFile(working_dir+"/newfile2.txt").size() == 0);
+                REQUIRE(fs.readFile(working_dir+"/newfile2.txt").size() == 0);
             }
         }
     }
@@ -295,13 +291,12 @@ SCENARIO("Write asynchronously", "[fs_async_write][fs_async][fs]"){
     GIVEN("A buffer to be written to disk") {
         Buffer buf(1000);
         WHEN("I write two times the buffer to the same path") {
-            auto& fs = atlas::ServiceLocator::getFilesystemManager();
             auto path = working_dir + "/two_times.txt";
             THEN("the size of the written file is equal to the size of one single buffer") {
-                fs.async_write(path, 5, buf, [](auto ec, auto len){});
-                fs.async_write(path, 5, buf, [path, buf_size = buf.size()](auto ec, auto len){
+                fs.async_write(path, buf, [](auto ec, auto len){});
+                fs.async_write(path, buf, [path, buf_size = buf.size()](auto ec, auto len){
                     auto size = boost::filesystem::file_size(path);
-                    REQUIRE((size == buf_size + 2*sizeof(atlas::FileVersion)));
+                    REQUIRE((size == buf_size));
                 });
             }
         }
@@ -312,7 +307,7 @@ SCENARIO("Write asynchronously", "[fs_async_write][fs_async][fs]"){
     std::this_thread::sleep_for(std::chrono::milliseconds{100});
     io.run();
 
-    atlas::ServiceLocator::getFilesystemManager().removeDirectory(working_dir);
+    fs.removeDirectory(working_dir);
 
 }
 
