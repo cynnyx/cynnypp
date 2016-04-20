@@ -21,6 +21,8 @@ target_include_directories(
 )
 
 # library dependency for the static lib
+message("Test sources: ${Boost_LIBRARIES}")
+
 target_link_libraries(
         ${COMMON_TEST_LIBRARY}
         PRIVATE ${Boost_LIBRARIES}

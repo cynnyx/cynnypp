@@ -144,6 +144,8 @@ endif()
 
 find_package(Boost 1.54 REQUIRED COMPONENTS system filesystem)
 set(Boost_USE_MULTITHREADED OFF)
+set(Boost_USE_STATIC_LIBS ON)
+
 #
 # Referenced directories and targets
 #
