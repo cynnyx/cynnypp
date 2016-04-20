@@ -22,7 +22,7 @@ TEST_CASE("Exist on different files", "[fs_exists][fs]") {
     REQUIRE(fsm.exists(input_dir+"/exists/exists") == true); //true
     REQUIRE(fsm.exists(input_dir+"/exists/normalfile") == true);
     REQUIRE_THROWS(fsm.exists(input_dir+"/exists/linkfile"));
-    REQUIRE_THROWS(fsm.exists(input_dir+"/exists/specialfile"));
+    //REQUIRE_THROWS(fsm.exists(input_dir+"/exists/specialfile"));
     REQUIRE(fsm.exists(input_dir+"/exists/*/sub") == false);
     REQUIRE(fsm.exists(input_dir+"/exists/file_with_no_read_permissions") == false);
     REQUIRE(fsm.exists(input_dir+"/exists/*ciao") == false);
