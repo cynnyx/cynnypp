@@ -1,0 +1,8 @@
+# QtCreator
+*.user
+# clion
+.idea
+*.autosave
+#emacs
+*~
+build/
