@@ -6,10 +6,10 @@
 #
 # Building in-tree is not allowed (we take care of your craziness).
 #
-
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR "Prevented in-tree built. Please create a build directory outside of the source code and call cmake from there. Thank you.")
 endif()
+
 
 #
 # Project configuration
@@ -45,26 +45,17 @@ set(COPYRIGHT_BUILD_MESSAGE "Copyright (c) " ${PROJECT_YEAR_COPYRIGHT} " " ${PRO
 set(ARCHITECTS_BUILD_MESSAGE "Designed by")
 set(DEVELOPERS_BUILD_MESSAGE "Developed by")
 set(CONTRIBUTORS_BUILD_MESSAGE "Contributors")
-set(DEV_CAINI_MICHELE "Caini Michele <michele.caini@cynny.com>")
-set(DEV_MONTEVERDE_PAOLO "Monteverde Paolo <paolo.monteverde@cynny.com>")
-set(DEV_LENZI_ALESSANDRO "Lenzi Alessandro <alessandro.lenzi@cynny.com>")
-set(DEV_FANELLI_MANUELE "Fanelli Manuele <manuele.fanelli@cynny.com>")
+set(DEVS_CYNNY_CPP "The Cynny C++ team")
 
 message("*")
 message("* " ${PROJECT_BUILD_MESSAGE})
 message("* " ${COPYRIGHT_BUILD_MESSAGE})
 message("*")
 message("* " ${ARCHITECTS_BUILD_MESSAGE})
-message("*     " ${DEV_CAINI_MICHELE})
-message("*     " ${DEV_FANELLI_MANUELE})
-message("*     " ${DEV_LENZI_ALESSANDRO})
-message("*     " ${DEV_MONTEVERDE_PAOLO})
+message("*     " ${DEVS_CYNNY_CPP})
 message("*")
 message("* " ${DEVELOPERS_BUILD_MESSAGE})
-message("*     " ${DEV_CAINI_MICHELE})
-message("*     " ${DEV_FANELLI_MANUELE})
-message("*     " ${DEV_LENZI_ALESSANDRO})
-message("*     " ${DEV_MONTEVERDE_PAOLO})
+message("*     " ${DEVS_CYNNY_CPP})
 message("*")
 message("* " ${CONTRIBUTORS_BUILD_MESSAGE})
 message("*")
@@ -86,7 +77,7 @@ add_definitions(
         -DPROJECT_VERSION=${PROJECT_VERSION}
 )
 
-#
+
 #
 # CMake configuration
 #
@@ -103,7 +94,7 @@ set(PROJECT_TEST_DIR test)
 set(PROJECT_RUNTIME_OUTPUT_DIRECTORY bin)
 set(PROJECT_SHARE_OUTPUT_DIRECTORY share)
 set(PROJECT_LIBRARY_OUTPUT_DIRECTORY lib)
-set(PROJECT_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_LIBRARY_OUTPUT_DIRECTORY}/static)
+set(PROJECT_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_LIBRARY_OUTPUT_DIRECTORY})
 set(PROJECT_INCLUDE_OUTPUT_DIRECTORY include)
 
 

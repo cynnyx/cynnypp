@@ -1,8 +1,7 @@
 #include <iostream>
 #include <boost/filesystem/operations.hpp>
-#include <file_system/fs_manager_interface.h>
-#include <file_system/fs_manager.h>
 #include <boost/asio.hpp>
+#include "io/async/fs/fs_manager.h"
 #include "catch.hpp"
 
 using Buffer = std::vector<uint8_t>;
