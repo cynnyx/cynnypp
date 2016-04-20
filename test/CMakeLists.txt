@@ -35,12 +35,15 @@ message("Tests: ${TARGET_TEST_ALL_SOURCES}")
 set(TARGET_TEST_ALL test_all)
 add_executable(${CYNNYPP_TEST_ALL} ${TARGET_TEST_ALL_SOURCES})
 
+
+
 # library dependency for the testall target
 target_link_libraries(
         ${TARGET_TEST_ALL}
         ${COMMON_TEST_LIBRARY}
 )
 
+message("Tests: ${Catch_INCLUDE_DIRS}")
 # include directories for the testall target
 target_include_directories(
         ${TARGET_TEST_ALL}
