@@ -151,13 +151,14 @@ set(Boost_USE_STATIC_LIBS ON)
 #
 
 set(TARGET_CYNNYPP cynnypp)
+set(CYNNYPP_TEST_ALL test_all)
 set(TARGET_DOCS docs)
 
 add_subdirectory(${PROJECT_SRC_DIR})
 
-#if(${Catch_FOUND})
-#    add_subdirectory(${PROJECT_TEST_DIR})
-#endif(${Catch_FOUND})
+if(${Catch_FOUND})
+    add_subdirectory(${PROJECT_TEST_DIR})
+endif(  ${Catch_FOUND})
 
 #if(${DOXYGEN_FOUND})
 #    add_subdirectory(${PROJECT_DOCS_DIR})
