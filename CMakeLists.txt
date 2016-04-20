@@ -87,6 +87,7 @@ add_definitions(
 )
 
 #
+#
 # CMake configuration
 #
 
