@@ -128,8 +128,7 @@ include(CTest)
 
 find_package(Doxygen 1.8)
 find_package(Threads REQUIRED)
-find_package(Catch REQUIRED)
-find_package(Threads REQUIRED)
+find_package(Catch)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
