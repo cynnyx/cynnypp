@@ -26,7 +26,6 @@ target_link_libraries(
 
 # list all source files inside the test dir
 file(GLOB_RECURSE TARGET_TEST_ALL_SOURCES *.cpp)
-message("Tests: ${TARGET_TEST_ALL_SOURCES}") 
 
 #test ALL
 set(TARGET_TEST_ALL test_all)
@@ -40,7 +39,6 @@ target_link_libraries(
         ${COMMON_TEST_LIBRARY}
 )
 
-message("Tests: ${Catch_INCLUDE_DIRS}")
 # include directories for the testall target
 target_include_directories(
         ${TARGET_TEST_ALL}
