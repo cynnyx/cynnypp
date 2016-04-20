@@ -16,6 +16,7 @@ add_library(${COMMON_TEST_LIBRARY} STATIC ${COMMON_TEST_SOURCES})
 # include directories for the static lib
 target_include_directories(
         ${COMMON_TEST_LIBRARY}
+        PRIVATE ${Boost_INCLUDE_DIRS}
         PRIVATE ${CYNNYPP_SRC_DIR}
 )
 
