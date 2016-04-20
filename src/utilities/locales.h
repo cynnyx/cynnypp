@@ -1,5 +1,5 @@
-#ifndef SMUGGLER_LOCALES_H
-#define SMUGGLER_LOCALES_H
+#ifndef CYNNYPP_LOCALES_H
+#define CYNNYPP_LOCALES_H
 
 #include <locale>
 
@@ -7,7 +7,7 @@
 // -----------------------------------------------------------------------------------------------
 //   KEEP CALM: specialization inside namespace std
 // -----------------------------------------------------------------------------------------------
-namespace std{
+namespace std {
 
 // -----------------------------------------------------------------------------------------------
 // Specialization of std::codecvt to work with uint8_t
@@ -103,8 +103,8 @@ namespace utilities {
 extern const std::locale utilities_locale;
 
 
-} // namespace utils
-} // namespace atlas
-}
+} // namespace utilities
+} // namespace cynnypp
+} // namespace cynny
 
-#endif //SMUGGLER_LOCALES_H
+#endif // CYNNYPP_LOCALES_H

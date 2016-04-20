@@ -524,7 +524,7 @@ private:
 
 }   // namespace filesystem
 
-} // namespace components
-} // namespace atlas
+} // namespace cynnypp
+} // namespace cynny
 
 #endif //ATLAS_FS_MANAGER_H_H

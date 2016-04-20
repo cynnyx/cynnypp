@@ -8,8 +8,7 @@ set(
     CYNNYPP_SOURCES
     main.cpp
     file_system/fs_manager.cpp
-    utilities/locales.cpp
-    utilities/event.cpp)
+    utilities/locales.cpp)
 
 add_library(
     ${TARGET_CYNNYPP}

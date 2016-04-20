@@ -1,9 +1,13 @@
 #include "locales.h"
 
 
-
+/**
+ * \cond doxygen should ignore this line
+ */
 std::locale::id std::codecvt<std::uint8_t,char,std::mbstate_t>::id;
-
+/**
+ * \endcond
+ */
 
 // -----------------------------------------------------------------------------------------------
 // Implementation of virtual functions of std::codecvt specialization
@@ -53,5 +57,5 @@ bool std::codecvt<uint8_t,char,std::mbstate_t>::do_always_noconv() const noexcep
 //                                  fs_locale
 // -----------------------------------------------------------------------------------------------
 
-// definition of the locale to be used by fs; the "character" type depends from Buffer::value_type
+// definition of the locale to be used by fs_manager; the "character" type is uint8_t
 const std::locale cynny::cynnypp::utilities::utilities_locale(std::locale{}, new std::codecvt<uint8_t, char, std::mbstate_t>);
