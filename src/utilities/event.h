@@ -8,6 +8,7 @@
 
 
 namespace cynny {
+namespace cynnypp {
 namespace utilities {
 
 /**
@@ -61,5 +62,6 @@ private:
 
 } // namespace utilities
 } // namespace cynny
+}
 
 #endif //SMUGGLER_EVENT_H

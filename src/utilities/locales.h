@@ -93,8 +93,9 @@ public:
 } // namespace std
 
 
-namespace cynny{
-namespace utilities{
+namespace cynny {
+namespace cynnypp {
+namespace utilities {
 
 /**
  * @brief atlas_locale represent the locale to be used by input streams in atlas
@@ -104,5 +105,6 @@ extern const std::locale utilities_locale;
 
 } // namespace utils
 } // namespace atlas
+}
 
 #endif //SMUGGLER_LOCALES_H

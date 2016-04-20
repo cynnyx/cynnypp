@@ -1,6 +1,7 @@
 #include "event.h"
 
 namespace cynny{
+namespace cynnypp{
 namespace utilities{
 
 Event::Event(bool set /* = false */)
@@ -34,3 +35,4 @@ void Event::wait_event()
 
 } // namespace utilities
 } // namespace cynny
+}

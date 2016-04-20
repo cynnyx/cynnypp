@@ -14,7 +14,7 @@ namespace cynny {
  *
  * These components handles transactions, filesystem, upload/download and timers.
  */
-namespace utilities {
+namespace cynnypp {
 
 /**
  * @brief Contains (predictably) everything is related to read/write stuff from/to disk

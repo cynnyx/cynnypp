@@ -54,4 +54,4 @@ bool std::codecvt<uint8_t,char,std::mbstate_t>::do_always_noconv() const noexcep
 // -----------------------------------------------------------------------------------------------
 
 // definition of the locale to be used by fs; the "character" type depends from Buffer::value_type
-const std::locale cynny::utilities::utilities_locale(std::locale{}, new std::codecvt<uint8_t, char, std::mbstate_t>);
+const std::locale cynny::cynnypp::utilities::utilities_locale(std::locale{}, new std::codecvt<uint8_t, char, std::mbstate_t>);

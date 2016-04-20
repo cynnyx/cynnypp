@@ -15,7 +15,7 @@
 #include "../utilities/locales.h"
 
 namespace cynny {
-namespace utilities {
+namespace cynnypp {
 namespace filesystem {
 
 using boost::filesystem::file_type;

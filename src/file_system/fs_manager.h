@@ -16,9 +16,11 @@
 
 
 namespace cynny{
-namespace utilities{
+namespace cynnypp{
 
 namespace filesystem{
+
+using namespace cynny::cynnypp::utilities;
 
 // Path could be replaced with boost::filesystem::path or something similar if needed
 using pos_type = std::basic_fstream<uint8_t>::pos_type;
