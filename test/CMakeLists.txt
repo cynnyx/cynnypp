@@ -7,8 +7,6 @@ set(CYNNYPP_SRC_DIR ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR})
 # list all source files inside the src dir
 file(GLOB_RECURSE COMMON_TEST_SOURCES ${CYNNYPP_SRC_DIR}/*.cpp)
 
-message("Test sources: ${COMMON_TEST_SOURCES}")
-
 # Common shared sources
 set(COMMON_TEST_LIBRARY test_library)
 add_library(${COMMON_TEST_LIBRARY} STATIC ${COMMON_TEST_SOURCES})
@@ -16,12 +14,8 @@ add_library(${COMMON_TEST_LIBRARY} STATIC ${COMMON_TEST_SOURCES})
 # include directories for the static lib
 target_include_directories(
         ${COMMON_TEST_LIBRARY}
-        PRIVATE ${Boost_INCLUDE_DIRS}
         PRIVATE ${CYNNYPP_SRC_DIR}
 )
-
-# library dependency for the static lib
-message("Test sources: ${Boost_LIBRARIES}")
 
 target_link_libraries(
         ${COMMON_TEST_LIBRARY}
