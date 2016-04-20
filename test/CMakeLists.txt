@@ -33,7 +33,6 @@ set(TARGET_TEST_ALL test_all)
 add_executable(${CYNNYPP_TEST_ALL} ${TARGET_TEST_ALL_SOURCES})
 
 
-
 # library dependency for the testall target
 target_link_libraries(
         ${TARGET_TEST_ALL}
