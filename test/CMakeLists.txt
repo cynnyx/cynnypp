@@ -1,3 +1,17 @@
+# boost configuration
+if(DEFINED ENV{JENKINS})
+    set(Boost_NO_SYSTEM_PATHS ON)
+    set(BOOST_ROOT /home/jenkins/atlas)
+    set(BOOST_LIBRARYDIR /home/jenkins/atlas/lib)
+    set(BOOST_INCLUDEDIR /home/jenkins/atlas/include)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L/home/jenkins/atlas/lib -static-libstdc++")
+    message("Setting custom boost!")
+endif()
+set(Boost_USE_MULTITHREADED OFF)
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost 1.54 REQUIRED COMPONENTS system filesystem)
+
+
 #
 # Tests configuration
 #
