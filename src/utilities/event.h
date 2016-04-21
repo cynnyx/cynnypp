@@ -33,26 +33,46 @@ public:
      *
      * @param set Tells whether the event will be initially set
      */
-    Event(bool set = false);
+    Event(bool set = false)
+        : is_set{set}
+    {}
 
     /**
      * @brief set_event sets the state of the event to *set*, i.e. unlock the event.
      *
      * Successive calls to Event::wait_event() won't block the execution, unless another call to Event::set_event() has been performed.
      */
-    void set_event();
+    void set_event()
+    {
+        std::lock_guard<std::mutex> lck{mtx};
+        is_set = true;
+        cv.notify_all();
+    }
 
     /**
      * @brief reset_event sets the state of the event to *not set*, i.e. the event will block at Event::wait_event since now on.
      */
-    void reset_event();
+    void reset_event()
+    {
+        std::lock_guard<std::mutex> lck{mtx};
+        is_set = false;
+    }
 
     /**
      * @brief wait_event blocks the caller thread until the state of the event gets set.
      *
      * If the event is already in *set* state, this function returns immediately.
      */
-    void wait_event();
+    void wait_event()
+    {
+        std::unique_lock<std::mutex> lck{mtx};
+        if( is_set )
+            return;
+
+        // the lambda is a condition to handle spurious wake-up's of the cv
+        auto s = std::cref(is_set);
+        cv.wait(lck, [s]()->bool { return s.get();} );
+    }
 
 private:
     std::mutex mtx;
@@ -64,4 +84,4 @@ private:
 } // namespace cynny
 }
 
-#endif //SMUGGLER_EVENT_H
+#endif // CYNNY_SIMPLE_EVENT_H
