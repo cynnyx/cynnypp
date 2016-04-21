@@ -20,6 +20,10 @@ template<size_t m, uint8_t k, class ElementType>
 class BloomFilter {
 public:
 
+    static_assert(m > 0, "Number of bits used cannot be 0");
+    static_assert(k > 0, "Number of hash functions used cannot be 0");
+
+
     /** \brief Creates a new bloom filter giving explicitly a list of std::function to use as hashes, through an initialzier list
      * \param hashes the hash functions passed in input (initializer list)
      * \param bf_serialized a starting bloom filter (default: empty)
@@ -38,6 +42,28 @@ public:
     BloomFilter(std::function<size_t(const ElementType &)> h, std::array<uint8_t, (m+7)/8> bf_serialized = std::array<uint8_t, (m+7)/8>{}, size_t seed = 468486423) : bf(bf_serialized){
             generateHashes(h, seed);
     }
+
+    /** Copy constructor */
+    BloomFilter(const BloomFilter &obj) {
+        bf = obj.bf;
+    }
+
+    /** Move constructor todo
+    BloomFilter(BloomFilter && obj) : BloomFilter() {
+
+    }
+     */
+
+    BloomFilter & operator=(BloomFilter r) {
+        swap(*this, r);
+        return *this;
+    }
+
+    friend void swap(BloomFilter &first, BloomFilter &second) {
+        using std::swap;
+        swap(first.bf, second.bf);
+    }
+
 
     /** \brief Adds to the set the element passed as input parameter
      * \param element the element to add to the set representation
@@ -75,6 +101,9 @@ public:
     std::array<uint8_t, (m+7)/8> serialize() {
         return bf;
     }
+
+
+    ~BloomFilter() = default;
 
 private:
     /** \brief adds the hashes passed as parameter to the internal list of functions to use to represent the set.
