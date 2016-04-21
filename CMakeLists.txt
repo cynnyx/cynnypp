@@ -22,9 +22,30 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif(NOT CMAKE_BUILD_TYPE)
 
-if(NOT LIBRARY_TYPE)
-    set(LIBRARY_TYPE "Shared")
-endif(NOT LIBRARY_TYPE)
+if(NOT DEFINED ENV{LIBRARY_TYPE})
+    set(LIBRARY_TYPE "shared")
+    message("-- LIBRARY_TYPE not specified: picking \"${LIBRARY_TYPE}\" by default")
+else()
+    set(LIBRARY_TYPE $ENV{LIBRARY_TYPE})
+endif()
+
+if(LIBRARY_TYPE STREQUAL "shared")
+    message("-- LIBRARY_TYPE is set to ${LIBRARY_TYPE} by environment variable")
+    set(LIBRARY_SHARED ON)
+    set(LIBRARY_STATIC OFF)
+elseif(LIBRARY_TYPE STREQUAL "static")
+    message("-- LIBRARY_TYPE is set to ${LIBRARY_TYPE} by environment variable")
+    set(LIBRARY_SHARED OFF)
+    set(LIBRARY_STATIC ON)
+#elseif(LIBRARY_TYPE STREQUAL "all") // TODO: does it make sense? is it feasible?
+#    message("all")
+#    set(LIBRARY_SHARED ON)
+#    set(LIBRARY_STATIC ON)
+else()
+    message("*** Warning: unsupported value for LIBRARY_TYPE: \"$ENV{LIBRARY_TYPE}\"; I will compile shared libs")
+    set(LIBRARY_SHARED ON)
+    set(LIBRARY_STATIC OFF)
+endif()
 
 
 
