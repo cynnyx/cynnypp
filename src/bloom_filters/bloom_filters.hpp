@@ -97,7 +97,7 @@ private:
     }
     //bytes representing the bloom filter
     std::array<uint8_t, (m+7)/8> bf;
-    //array of hash functions. 
+    //array of hash functions.
     std::array<std::function<size_t(const ElementType &)>, k> hash_functions;
 
 };
