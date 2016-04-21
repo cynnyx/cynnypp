@@ -2,6 +2,13 @@
 #include <array>
 #include <initializer_list>
 #include <stdexcept>
+
+namespace cynny {
+namespace cynnypp {
+namespace bloom_filters {
+
+
+
 /** \brief BloomFilter class provides the minimal functionalities needed in order to represent set membership using bloom
  * filters.
  * \tparam m the number of bits of the bloom filter
@@ -101,3 +108,8 @@ private:
     std::array<std::function<size_t(const ElementType &)>, k> hash_functions;
 
 };
+
+
+}
+}
+}
