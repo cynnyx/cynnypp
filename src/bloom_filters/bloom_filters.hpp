@@ -2,6 +2,7 @@
 #include <array>
 #include <initializer_list>
 #include <stdexcept>
+#include <iostream>
 
 namespace cynny {
 namespace cynnypp {
@@ -46,6 +47,7 @@ public:
     /** Copy constructor */
     BloomFilter(const BloomFilter &obj) {
         bf = obj.bf;
+        hash_functions = obj.hash_functions;
     }
 
 
@@ -64,6 +66,7 @@ public:
     friend void swap(BloomFilter &first, BloomFilter &second) {
         using std::swap;
         swap(first.bf, second.bf);
+        swap(first.hash_functions, second.hash_functions);
     }
 
 
