@@ -48,11 +48,13 @@ public:
         bf = obj.bf;
     }
 
-    /** Move constructor todo
-    BloomFilter(BloomFilter && obj) : BloomFilter() {
 
+
+    /** Move constructor */
+    BloomFilter(BloomFilter && obj) : BloomFilter() {
+        swap(*this, obj);
     }
-     */
+
 
     BloomFilter & operator=(BloomFilter r) {
         swap(*this, r);
@@ -106,6 +108,9 @@ public:
     ~BloomFilter() = default;
 
 private:
+
+    BloomFilter() = default;
+
     /** \brief adds the hashes passed as parameter to the internal list of functions to use to represent the set.
      * \param l the list of hash functions to use
      */
