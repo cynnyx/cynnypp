@@ -5,6 +5,7 @@
 #include <string>
 #include <functional>
 #include <type_traits>
+#include <vector>
 #include "utilities/event.h"
 
 namespace cynny {
