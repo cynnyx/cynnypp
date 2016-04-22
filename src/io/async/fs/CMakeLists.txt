@@ -24,6 +24,7 @@ set(ASYNC_FS_SRC_DIR ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/io/async/fs/)
 file(GLOB_RECURSE ASYNC_FS_SOURCES ${ASYNC_FS_SRC_DIR}/*.cpp)
 
 # Common shared sources
+set(ASYNC_FS_LIBRARY_NAME cynpp_async_fs)
 set(ASYNC_FS_LIBRARY_SHARED async_fs_shared)
 set(ASYNC_FS_LIBRARY_STATIC async_fs_static)
 
@@ -45,8 +46,13 @@ if(${LIBRARY_SHARED})
     # set positions independet code flag for shared lib
     set_target_properties(${ASYNC_FS_LIBRARY_SHARED} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-    # set the output name
-    set_target_properties(${ASYNC_FS_LIBRARY_SHARED} PROPERTIES OUTPUT_NAME cynpp_async_fs)
+    # set output name and path
+    set_target_properties(
+        ${ASYNC_FS_LIBRARY_SHARED}
+        PROPERTIES
+        OUTPUT_NAME ${ASYNC_FS_LIBRARY_NAME}
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+        )
 endif()
 
 # add target for the static lib
@@ -60,7 +66,12 @@ if(${LIBRARY_STATIC})
     target_include_directories(${ASYNC_FS_LIBRARY_STATIC} PRIVATE ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/)
     target_link_libraries(${ASYNC_FS_LIBRARY_STATIC} PRIVATE ${Boost_LIBRARIES})
 
-    # set the output name
-    set_target_properties(${ASYNC_FS_LIBRARY_STATIC} PROPERTIES OUTPUT_NAME cynpp_async_fs)
+    # set output name and path
+    set_target_properties(
+        ${ASYNC_FS_LIBRARY_STATIC}
+        PROPERTIES
+        OUTPUT_NAME ${ASYNC_FS_LIBRARY_NAME}
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+        )
 endif()
 

@@ -525,7 +525,7 @@ ChunkedReader::ChunkedReader(FilesystemManager& fs, const Path& p, size_t chunk_
     if(!is)
         throw ErrorCode(ErrorCode::open_failure, "ChunkedReader was not able to open the file");
 
-    // set atlas locale (to be able to read using atlas "byte" type)
+    // set uint8_t locale (to be able to read using uint8_t type)
     is.imbue(utilities::utilities_locale);
     // seek to the beginning (we've seeked to the end to check file size)
     is.seekg(0, std::ios::beg);
@@ -688,5 +688,5 @@ void ChunkedFstream::next_chunk(FilesystemManager::ReadChunkHandler h)
 }
 
 } // namespace filesystem
-} // namespace components
-} // namespace atlas
+} // namespace cynnypp
+} // namespace cynny

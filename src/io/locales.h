@@ -98,7 +98,7 @@ namespace cynnypp {
 namespace utilities {
 
 /**
- * @brief atlas_locale represent the locale to be used by input streams in atlas
+ * @brief utilities_locale is a locale capable to handle characters of type uint8_t
  */
 extern const std::locale utilities_locale;
 

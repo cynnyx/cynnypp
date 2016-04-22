@@ -292,4 +292,4 @@ inline ChunkedFstreamInterface::~ChunkedFstreamInterface() {}
 }
 }
 }
-#endif //ATLAS_FILESYSTEMMANAGERINTERFACE_H_H
+#endif // FILESYSTEMMANAGERINTERFACE_H_H
