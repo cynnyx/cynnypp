@@ -1,5 +1,5 @@
-#ifndef ATLAS_FS_MANAGER_H_H
-#define ATLAS_FS_MANAGER_H_H
+#ifndef CYNNYPP_FS_MANAGER_H_H
+#define CYNNYPP_FS_MANAGER_H_H
 
 #include "fs_manager_interface.h"
 #include <cstdint>
@@ -15,10 +15,10 @@
 #include <map>
 
 
-namespace cynny{
-namespace cynnypp{
+namespace cynny {
+namespace cynnypp {
 
-namespace filesystem{
+namespace filesystem {
 
 using namespace cynny::cynnypp::utilities;
 
@@ -527,4 +527,4 @@ private:
 } // namespace cynnypp
 } // namespace cynny
 
-#endif //ATLAS_FS_MANAGER_H_H
+#endif // CYNNYPP_FS_MANAGER_H_H
