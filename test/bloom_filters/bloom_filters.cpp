@@ -82,6 +82,31 @@ TEST_CASE("Creation of an empty bloom filter", "[bloom_filter][bf]") {
             }
         }
 
+        AND_WHEN("An union is performed with another set") {
+            std::map<int, int> mySet1;
+            std::map<int, int> mySet2;
+            BloomFilter<1024, 2, int> bf2(std::hash<int> {});
+            int setLength = 200;
+            while (setLength--) {
+                int val = std::rand();
+                mySet1.insert({val, val});
+                bf.set(val);
+                val = std::rand();
+                mySet2.insert({val, val});
+                bf2.set(val);
+            }
+            bf += bf2;
+            THEN("The union works correctly.") {
+                for(auto &v : mySet1) {
+                    REQUIRE(bf.has(v.first));
+                }
+                for(auto &v : mySet2) {
+                    REQUIRE(bf2.has(v.first));
+                }
+            }
+
+        }
+
     }
 
 
@@ -156,8 +181,8 @@ TEST_CASE("Creation of an empty bloom filter", "[bloom_filter][bf]") {
                 for (auto &v : mySet) {
                     REQUIRE(bf2.has(v.first));
                 }
-
             }
+
         }
 
     }

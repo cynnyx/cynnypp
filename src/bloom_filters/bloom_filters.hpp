@@ -57,12 +57,13 @@ public:
         swap(*this, obj);
     }
 
-
+    /** Assignment operator */
     BloomFilter & operator=(BloomFilter r) {
         swap(*this, r);
         return *this;
     }
 
+    /** Swap function, used to implemente copy and swap idiom */
     friend void swap(BloomFilter &first, BloomFilter &second) {
         using std::swap;
         swap(first.bf, second.bf);
@@ -99,6 +100,26 @@ public:
         }
         return true;
     }
+    /** \brief union assignment operator
+     * \param other the bloom filter with which we want to perform the union
+     *
+     */
+    BloomFilter& operator+=(const BloomFilter &other) {
+        //perform bitwise or of the two sets.
+        for(unsigned int i = 0; i < (m+7)/8; ++i) {
+            this->bf[i] |= other.bf[i];
+        }
+        return *this;
+    }
+
+    /** \brief union operator
+     *  \param other the bloom filter with which we want to perform the union.
+     */
+    const BloomFilter operator+(const BloomFilter &other) const{
+        return BloomFilter(*this) += other;
+    }
+
+
     /** \brief returns a serialized representation of the bloom filter.
      *
      * \return serialization of the bloom filter.
