@@ -155,16 +155,21 @@ void FilesystemManager::copyFile_static(const Path& from, const Path& to)
     }
 }
 
+/* 
+ * Precondition: boost::filesystem::is_directory(from) == true
+ */
 void copyDirectory_(const boost::filesystem::path& from, const boost::filesystem::path& to_)
 {
     try {
         // if "to_" is a directory, we copy the dir and its content inside "from"
         // example: from = a/, to_ = b/, actual_to = a/b/
-        const auto& actual_to = boost::filesystem::is_directory(to_) ? to_ /  from.relative_path().filename() : to_;
+        const auto actual_from = from / std::string{boost::filesystem::path::preferred_separator};
+        const auto actual_to = boost::filesystem::is_directory(to_) ? to_ /  actual_from.parent_path().filename() : to_;
 
         // boost copy_directory just create a new directory with copied attributes
-        if(boost::filesystem::is_directory(from))
-            boost::filesystem::copy_directory(from, actual_to);
+        boost::filesystem::copy_directory(from, actual_to);
+        
+        // recursively copy directory content
         boost::filesystem::directory_iterator end_itr;
         for(boost::filesystem::directory_iterator p(from);  p != end_itr; ++p) {
             const auto& sub_to = actual_to / p->path().filename();
