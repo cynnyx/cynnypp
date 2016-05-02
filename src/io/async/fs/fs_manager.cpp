@@ -158,7 +158,9 @@ void FilesystemManager::copyFile_static(const Path& from, const Path& to)
 void copyDirectory_(const boost::filesystem::path& from, const boost::filesystem::path& to_)
 {
     try {
-        const auto& actual_to = boost::filesystem::is_directory(to_) ? to_ /  from.filename() : to_;
+        // if "to_" is a directory, we copy the dir and its content inside "from"
+        // example: from = a/, to_ = b/, actual_to = a/b/
+        const auto& actual_to = boost::filesystem::is_directory(to_) ? to_ /  from.relative_path().filename() : to_;
 
         // boost copy_directory just create a new directory with copied attributes
         if(boost::filesystem::is_directory(from))
