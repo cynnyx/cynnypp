@@ -86,7 +86,7 @@ static boost::filesystem::file_status check_path_admitted(const boost::filesyste
 // standalone helper functions for filesytem synchronous I/O operations
 // -----------------------------------------------------------------------------------------------
 
-bool FilesystemManager::exists_static(const Path& p)
+bool exists(const Path& p)
 {
     // check and throw if needed
     auto status = check_path_admitted<file_type::file_not_found,file_type::regular_file,file_type::directory_file>(p);
@@ -99,7 +99,7 @@ bool FilesystemManager::exists_static(const Path& p)
 }
 
 
-bool FilesystemManager::removeFile_static(const Path& p)
+bool removeFile(const Path& p)
 {
     boost::filesystem::path boost_path{p};
     // check and throw if needed
@@ -127,7 +127,7 @@ static void move_(const boost::filesystem::path& from, const boost::filesystem::
 }
 
 
-void FilesystemManager::move_static(const Path &from, const Path &to)
+void move(const Path &from, const Path &to)
 {
     boost::filesystem::path boost_from{from};
     boost::filesystem::path boost_to{to};
@@ -139,7 +139,7 @@ void FilesystemManager::move_static(const Path &from, const Path &to)
 }
 
 
-void FilesystemManager::copyFile_static(const Path& from, const Path& to)
+void copyFile(const Path& from, const Path& to)
 {
     if(from == to)
         throw ErrorCode(ErrorCode::operation_not_permitted, "source and destination match");
@@ -187,7 +187,7 @@ void copyDirectory_(const boost::filesystem::path& from, const boost::filesystem
     }
 }
 
-void FilesystemManager::copyDirectory_static(const Path& from, const Path& to)
+void copyDirectory(const Path& from, const Path& to)
 {
     boost::filesystem::path boost_from{from};
     boost::filesystem::path boost_to{to};
@@ -197,7 +197,7 @@ void FilesystemManager::copyDirectory_static(const Path& from, const Path& to)
 }
 
 
-uintmax_t FilesystemManager::removeDirectory_static(const Path& p)
+uintmax_t removeDirectory(const Path& p)
 {
     boost::filesystem::path boost_path{p};
     // check and throw if needed
@@ -211,7 +211,7 @@ uintmax_t FilesystemManager::removeDirectory_static(const Path& p)
 }
 
 
-bool FilesystemManager::createDirectory_static(const Path &p, bool parents)
+bool createDirectory(const Path &p, bool parents)
 {
     boost::filesystem::path boost_path{p};
     if(parents) {
@@ -237,7 +237,7 @@ bool FilesystemManager::createDirectory_static(const Path &p, bool parents)
 
 // --------------------- file access --------------
 
-Buffer FilesystemManager::readFile_static(const Path& p)
+Buffer readFile(const Path& p)
 {
     // check and throw if needed
     check_path_admitted<file_type::regular_file>(p);
@@ -265,7 +265,7 @@ Buffer FilesystemManager::readFile_static(const Path& p)
 
 
 
-void FilesystemManager::writeFile_static(const Path& p, const Buffer& buf)
+void writeFile(const Path& p, const Buffer& buf)
 {
     // check and throw if needed
     check_path_admitted<file_type::file_not_found,file_type::regular_file>(p);
@@ -284,7 +284,7 @@ void FilesystemManager::writeFile_static(const Path& p, const Buffer& buf)
 
 
 
-void FilesystemManager::appendToFile_static(const Path& p, const Buffer& bytes)
+void appendToFile(const Path& p, const Buffer& bytes)
 {
     // check and throw if needed
     auto status = check_path_admitted<file_type::file_not_found,file_type::regular_file>(p);
@@ -310,42 +310,42 @@ void FilesystemManager::appendToFile_static(const Path& p, const Buffer& bytes)
 
 bool FilesystemManager::exists(const Path& p)
 {
-    return exists_static(p);
+    return filesystem::exists(p);
 }
 
 
 bool FilesystemManager::removeFile(const Path& p)
 {
-    return removeFile_static(p);
+    return filesystem::removeFile(p);
 }
 
 
 void FilesystemManager::move(const Path &from, const Path &to)
 {
-    return move_static(from, to);
+    return filesystem::move(from, to);
 }
 
 
 void FilesystemManager::copyFile(const Path& from, const Path& to)
 {
-    return copyFile_static(from, to);
+    return filesystem::copyFile(from, to);
 }
 
 void FilesystemManager::copyDirectory(const Path& from, const Path& to)
 {
-    return copyDirectory_static(from, to);
+    return filesystem::copyDirectory(from, to);
 }
 
 
 uintmax_t FilesystemManager::removeDirectory(const Path& p)
 {
-    return removeDirectory_static(p);
+    return filesystem::removeDirectory(p);
 }
 
 
 bool FilesystemManager::createDirectory(const Path &p, bool parents)
 {
-    return createDirectory_static(p, parents);
+    return filesystem::createDirectory(p, parents);
 }
 
 
@@ -353,7 +353,7 @@ bool FilesystemManager::createDirectory(const Path &p, bool parents)
 
 Buffer FilesystemManager::readFile(const Path& p)
 {
-    return readFile_static(p);
+    return filesystem::readFile(p);
 }
 
 
@@ -361,13 +361,13 @@ Buffer FilesystemManager::readFile(const Path& p)
 
 void FilesystemManager::writeFile(const Path& p, const Buffer& buf)
 {
-    return writeFile_static(p, buf);
+    return filesystem::writeFile(p, buf);
 }
 
 
 void FilesystemManager::appendToFile(const Path& p, const Buffer& bytes)
 {
-    return appendToFile_static(p, bytes);
+    return filesystem::appendToFile(p, bytes);
 }
 
 
@@ -446,7 +446,7 @@ void FilesystemManager::perform_next_operation()
             std::reference_wrapper<Buffer> tmp = std::get<2>(t);
             auto &buf = tmp.get();
             h = std::move(std::get<3>(t));
-            buf = readFile_static(std::get<1>(t));
+            buf = filesystem::readFile(std::get<1>(t));
             ec = ErrorCode::success;
             size = buf.size();
         }
@@ -455,7 +455,7 @@ void FilesystemManager::perform_next_operation()
             std::tuple<OperationCode,const Path,std::reference_wrapper<const Buffer>,CompletionHandler> t = q_.pop_write();
             const auto& buf = get<2>(t).get();
             h = std::move(get<3>(t));
-            writeFile_static(get<1>(t), buf);
+            filesystem::writeFile(get<1>(t), buf);
             ec = ErrorCode::success;
             size = buf.size();
         }
@@ -464,7 +464,7 @@ void FilesystemManager::perform_next_operation()
             auto t = q_.pop_write();
             const auto &buf = get<2>(t).get();
             h = std::move(get<3>(t));
-            appendToFile_static(get<1>(t), buf);
+            filesystem::appendToFile(get<1>(t), buf);
             ec = ErrorCode::success;
             size = buf.size();
         } break;

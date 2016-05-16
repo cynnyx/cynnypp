@@ -402,27 +402,6 @@ public:
     std::shared_ptr<ChunkedFstreamInterface> make_chunked_stream(const Path& p, size_t chunk_size) override;
 
 
-
-
-    /* ------------------------------- static helper functions -----------------------------------
-     * For every non static member function of the FilesystemManagerInterface we have a correspondent
-     * static member function that performs the operation on the filesystem. Their behaviour
-     * is well documented by the non-static version documentation.
-     */
-
-    // operational static functions
-    static bool exists_static(const Path& p);
-    static bool removeFile_static(const Path& p);
-    static void move_static(const Path& from, const Path& to);
-    static void copyFile_static(const Path& from, const Path& to);
-    static void copyDirectory_static(const Path& from, const Path& to);
-    static uintmax_t removeDirectory_static(const Path& p);
-    static bool createDirectory_static(const Path& p, bool parents = false);
-    // file access
-    static Buffer readFile_static(const Path& p);
-    static void writeFile_static(const Path& p, const Buffer& buf);
-    static void appendToFile_static(const Path& p, const Buffer& bytes);
-
 private:
     enum class OperationCode {
         async_read, async_write, async_read_chunk, async_append
@@ -522,6 +501,137 @@ private:
     std::reference_wrapper<FilesystemManager> fs;
     std::shared_ptr<impl::ChunkedReader> reader;
 };
+
+
+
+/* ------------------------------- free helper functions -----------------------------------
+ * For every non static member function of the FilesystemManager we have a matching
+ * free function that performs the operation on the filesystem.
+ */
+
+// operational static functions
+
+/**
+ * Checks whether a file or a directory exists.
+ *
+ * \param p path to a file or directory
+ *
+ * \returns true if the file or directory exists, false otherwise
+ *
+ * \throws If some filesystem error occurs, or if p is a symlink or not a directory or a regular file, a FilesystemError is thrown
+ */
+bool exists(const Path& p);
+
+/**
+ * Remove a file from the filesystem.
+ *
+ * If file p does not exists, the function does NOT throw and returns false
+ *
+ *  \param p path to the file
+ *
+ * \throws If some filesystem error occurs, or if p is a symlink or not a regular file, a FilesystemError is thrown
+ */
+bool removeFile(const Path& p);
+
+/**
+ * Move a file or a directory to a different path.
+ *
+ * \param from path to the file or directory to be moved
+ * \param to path to the file or directory to move to
+ *
+ * \throws If some filesystem error occurs, or if form or to is a symlink or not a directory or a regular file, a FilesystemError is thrown
+ */
+void move(const Path& from, const Path& to);
+
+/**
+ * Copy a file to another path on the filesystem.
+ *
+ * If to is a (existing) directory, from is copied inside to.
+ *
+ * \param from - path to the file to be moved
+ * \param to - path to move the file to
+ *
+ * \throws If some filesystem error occurs, or if from or to is a symlink or not a regular file, a FilesystemError is thrown
+ */
+void copyFile(const Path& from, const Path& to);
+
+/**
+ * Recursively copy a directory to another path on the filesystem.
+ *
+ * The recursive copy ignores everything that is not a regular file or a directory
+ *
+ * \param from - path to the directory to be copied
+ * \param to - path to copy the directory to
+ *
+ * \throws If some filesystem error occurs, or if from or to is a symlink or not a directory, a FilesystemError is thrown
+ */
+void copyDirectory(const Path& from, const Path& to);
+
+/**
+ * Remove a directory from the filesystem.
+ *
+ *  \param p path to the directory
+ *
+ * If directory p does not exists, the function does NOT throw and returns 0
+ *
+ *  \returns The number of files removed
+ *
+ * \throws If some filesystem error occurs, or if p is a symlink or not a regular directory, a FilesystemError is thrown
+ */
+uintmax_t removeDirectory(const Path& p);
+
+/**
+ * @brief createDirectory
+ * Create the DIRECTORY(ies), if they do not already exist.
+ *
+ * If parents is true, no exception is thrown when the directory already exists,
+ * or when the parent directories need to be created and parent directories are
+ * made as needed.
+ *
+ * @param p - path of the directory to create
+ * @param parents - no error if existing, make parent directories as needed
+ *
+ * @return true if a directory was created, false otherwise
+ *
+ * @throws If p already exists and it's not a directory, an ErrorCode is thrown.
+ * When parents is false, if p already exists or p is inside a not existing directory,
+ * an ErrorCode is thrown.
+ */
+bool createDirectory(const Path& p, bool parents = false);
+
+// file access
+
+/**
+ * Read a whole file from the filesystem and return its content as a vector of chars.
+ *
+ * \param p - path to the file to be read
+ *
+ * \returns a vector of chars containing the file content
+ *
+ * \throws If some filesystem error occurs, or if p is a symlink or not a  a regular file, a FilesystemError is thrown
+ * \throws If there is an error in allocating memory for the returned vector, an exception may be thrown
+ */
+Buffer readFile(const Path& p);
+
+/**
+ * Write a buffer to file
+ *
+ * \param p - path to the file to write
+ * \param buf - buffer of chars to be written
+ *
+ * \throws If some filesystem error occurs, or if p is not a regular file, a FilesystemError is thrown
+ */
+void writeFile(const Path& p, const Buffer& buf);
+
+/**
+ * Append a vector of chars to a file.
+ *
+ * \param p - path to the file to append to
+ * \param bytes - a vector of chars append to p
+ *
+ * \throws If some filesystem error occurs, or if p is a symlink or not a directory or a regular file, a FilesystemError is thrown
+ */
+void appendToFile(const Path& p, const Buffer& bytes);
 
 
 }   // namespace filesystem
