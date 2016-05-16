@@ -147,6 +147,9 @@ void FilesystemManager::copyFile_static(const Path& from, const Path& to)
     boost::filesystem::path boost_to{to};
     // check and throw if needed
     check_path_admitted<file_type::regular_file>(boost_from);
+    // if to is a directory, we copy the file inside it
+    if(boost::filesystem::is_directory(boost_to) && boost::filesystem::exists(boost_to))
+        boost_to /= boost_from.filename();
     try {
         boost::filesystem::copy_file(boost_from, boost_to, boost::filesystem::copy_option::overwrite_if_exists);
     }

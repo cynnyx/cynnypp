@@ -7,7 +7,7 @@
 using Buffer = std::vector<uint8_t>;
 using namespace cynny::cynnypp::filesystem;
 const std::string input_dir = "../test/file_system/data";
-const std::string working_dir = "./data";
+const std::string working_dir = "./test/filesystem";
 boost::asio::io_service io;
 FilesystemManager fsm(io);
 
@@ -530,4 +530,62 @@ SCENARIO("Append to file", "[fs_append][fs]") {
     }
 
     fsm.removeDirectory(working_dir);
+}
+
+
+TEST_CASE("Copy file to directory (with slash)", "[fs_copy][fs][fs_static]") {
+    FilesystemManager::removeDirectory_static(working_dir);
+    // throws because the output folder does not exist
+    REQUIRE_THROWS(FilesystemManager::copyFile_static(input_dir + "/copy/cp1", working_dir + "/copy/"));
+
+
+    FilesystemManager::createDirectory_static(working_dir + "/copy/", true);
+    FilesystemManager::copyFile_static(input_dir + "/copy/cp1", working_dir + "/copy/");
+    REQUIRE(FilesystemManager::exists_static(working_dir + "/copy/cp1"));
+
+    FilesystemManager::removeDirectory_static(working_dir);
+}
+
+
+TEST_CASE("Copy file to directory (without slash)", "[fs_copy][fs][fs_static]") {
+    FilesystemManager::removeDirectory_static(working_dir);
+
+    FilesystemManager::createDirectory_static(working_dir + "/copy/", true);
+    FilesystemManager::copyFile_static(input_dir + "/copy/cp1", working_dir + "/copy");
+    REQUIRE(FilesystemManager::exists_static(working_dir + "/copy/cp1"));
+
+    FilesystemManager::removeDirectory_static(working_dir);
+}
+
+
+TEST_CASE("Copy directory inside other dir", "[fs_copy][fs][fs_static]") {
+    FilesystemManager::removeDirectory_static(working_dir);
+
+    FilesystemManager::copyDirectory_static(input_dir + "/copy/cpdir", working_dir);
+    REQUIRE(FilesystemManager::exists_static(working_dir + "/1/"));
+    REQUIRE(FilesystemManager::exists_static(working_dir + "/2"));
+
+    FilesystemManager::removeDirectory_static(working_dir);
+}
+
+
+TEST_CASE("Copy directory (with slash) inside other dir", "[fs_copy][fs][fs_static]") {
+    FilesystemManager::removeDirectory_static(working_dir);
+
+    FilesystemManager::copyDirectory_static(input_dir + "/copy/cpdir/", working_dir);
+    REQUIRE(FilesystemManager::exists_static(working_dir + "/1/"));
+    REQUIRE(FilesystemManager::exists_static(working_dir + "/2"));
+
+    FilesystemManager::removeDirectory_static(working_dir);
+}
+
+
+TEST_CASE("Copy directory (with slash) inside other dir (with slash)", "[fs_copy][fs][fs_static]") {
+    FilesystemManager::removeDirectory_static(working_dir);
+
+    FilesystemManager::copyDirectory_static(input_dir + "/copy/cpdir/", working_dir + "/");
+    REQUIRE(FilesystemManager::exists_static(working_dir + "/1/"));
+    REQUIRE(FilesystemManager::exists_static(working_dir + "/2"));
+
+    FilesystemManager::removeDirectory_static(working_dir);
 }

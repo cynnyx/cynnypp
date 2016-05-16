@@ -239,6 +239,8 @@ public:
     /**
      * Copy a file to another path on the filesystem.
      *
+     * If to is a (existing) directory, from is copied inside to.
+     *
      * \param from - path to the file to be moved
      * \param to - path to move the file to
      *
