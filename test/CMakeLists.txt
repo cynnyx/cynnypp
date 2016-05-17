@@ -11,7 +11,6 @@ set(Boost_USE_MULTITHREADED OFF)
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.54 REQUIRED COMPONENTS system filesystem)
 
-
 #
 # Tests configuration
 #
