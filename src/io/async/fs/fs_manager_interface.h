@@ -6,6 +6,7 @@
 #include <functional>
 #include <type_traits>
 #include <vector>
+#include <sstream>
 #include "utilities/event.h"
 
 namespace cynny {
@@ -59,12 +60,16 @@ public:
     operator Error() const { return val; }
 
     // accessors
-    std::string what() const;
-
+    std::string what() const
+    {
+        std::ostringstream os(tag);
+        os << "error " << val << ": " << msg;
+        return os.str();
+    }
 private:
     Error val;
     std::string msg;
-    static const std::string tag;
+    static constexpr const auto tag = "FilesystemError: ";
 };
 
 // fwd declaration
