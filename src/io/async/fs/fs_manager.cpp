@@ -22,17 +22,6 @@ using boost::filesystem::file_type;
 using namespace impl;
 
 
-// definition of the "tag" for FilesystemError messages
-const std::string ErrorCode::tag{"FilesystemError: "};
-
-
-std::string ErrorCode::what() const
-{
-    std::ostringstream os(tag);
-    os << "error " << val << ": " << msg;
-    return os.str();
-}
-
 // -----------------------------------------------------------------------------------------------
 // is_admitted: check whether a file_type is among those specified in the template parameters pack
 // -----------------------------------------------------------------------------------------------

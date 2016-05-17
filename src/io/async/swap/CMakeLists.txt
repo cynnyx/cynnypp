@@ -14,18 +14,18 @@ find_package(Boost 1.54 REQUIRED COMPONENTS system filesystem)
 
 
 #
-# AsyncFs configuration
+# SwappingBuffer configuration
 #
 
-set(ASYNC_FS_SRC_DIR ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/io/async/fs/)
+set(SWAPPING_BUF_SRC_DIR ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/io/async/swap/)
 
 # list all source files inside the src dir
-file(GLOB_RECURSE ASYNC_FS_SOURCES ${ASYNC_FS_SRC_DIR}/*.cpp)
+file(GLOB_RECURSE SWAP_BUF_SOURCES ${SWAPPING_BUF_SRC_DIR}/*.cpp)
 
 # Common shared sources
-set(ASYNC_FS_LIBRARY_NAME cynpp_async_fs)
-set(ASYNC_FS_LIBRARY_SHARED async_fs_shared)
-set(ASYNC_FS_LIBRARY_STATIC async_fs_static)
+set(SWAP_BUF_LIBRARY_NAME cynpp_swap_buf)
+set(SWAP_BUF_LIBRARY_SHARED swap_buf_shared)
+set(SWAP_BUF_LIBRARY_STATIC swap_buf_static)
 
 
 # note: we cannot compile the code just once, because for the shared version we have to set -fPIC
@@ -35,21 +35,20 @@ set(ASYNC_FS_LIBRARY_STATIC async_fs_static)
 # add target for the shared lib
 if(${LIBRARY_SHARED})
     add_library(
-        ${ASYNC_FS_LIBRARY_SHARED} SHARED
-        ${ASYNC_FS_SOURCES}
-        ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/io/locales.cpp
+        ${SWAP_BUF_LIBRARY_SHARED} SHARED
+        ${SWAP_BUF_SOURCES}
         )
-    target_include_directories(${ASYNC_FS_LIBRARY_SHARED} PRIVATE ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/)
-    target_link_libraries(${ASYNC_FS_LIBRARY_SHARED} PRIVATE ${Boost_LIBRARIES})
+    target_include_directories(${SWAP_BUF_LIBRARY_SHARED} PRIVATE ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/)
+    target_link_libraries(${SWAP_BUF_LIBRARY_SHARED} PRIVATE ${Boost_LIBRARIES} PRIVATE ${ASYNC_FS_LIBRARY_SHARED})
 
     # set positions independet code flag for shared lib
-    set_target_properties(${ASYNC_FS_LIBRARY_SHARED} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(${SWAP_BUF_LIBRARY_SHARED} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
     # set output name and path
     set_target_properties(
-        ${ASYNC_FS_LIBRARY_SHARED}
+        ${SWAP_BUF_LIBRARY_SHARED}
         PROPERTIES
-        OUTPUT_NAME ${ASYNC_FS_LIBRARY_NAME}
+        OUTPUT_NAME ${SWAP_BUF_LIBRARY_NAME}
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
         )
 endif()
@@ -57,19 +56,18 @@ endif()
 # add target for the static lib
 if(${LIBRARY_STATIC})
     add_library(
-        ${ASYNC_FS_LIBRARY_STATIC} STATIC
-        ${ASYNC_FS_SOURCES}
-        ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/io/locales.cpp
+        ${SWAP_BUF_LIBRARY_STATIC} STATIC
+        ${SWAP_BUF_SOURCES}
         )
 
-    target_include_directories(${ASYNC_FS_LIBRARY_STATIC} PRIVATE ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/)
-    target_link_libraries(${ASYNC_FS_LIBRARY_STATIC} PRIVATE ${Boost_LIBRARIES})
+    target_include_directories(${SWAP_BUF_LIBRARY_STATIC} PRIVATE ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/)
+    target_link_libraries(${SWAP_BUF_LIBRARY_STATIC} PRIVATE ${Boost_LIBRARIES} PRIVATE ${ASYNC_FS_LIBRARY_STATIC})
 
     # set output name and path
     set_target_properties(
-        ${ASYNC_FS_LIBRARY_STATIC}
+        ${SWAP_BUF_LIBRARY_STATIC}
         PROPERTIES
-        OUTPUT_NAME ${ASYNC_FS_LIBRARY_NAME}
+        OUTPUT_NAME ${SWAP_BUF_LIBRARY_NAME}
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
         )
 endif()
