@@ -51,9 +51,9 @@ void SwappingBufferOverwrite::readAll(std::function<void(const Buffer &b)> succe
             return successCallback(*self->currentBuffer);
         }
         self->fs.async_read(self->tmp_path, self->tmp_read, [self, successCallback, errorCallback](auto ec, auto length){
-            if(ec || length < 8) return errorCallback({filesystem::ErrorCode::read_failure, std::string("Could not read from disk, because of ") + ec.what()});
+            if(ec) return errorCallback({filesystem::ErrorCode::read_failure, std::string("Could not read from disk, because of ") + ec.what()});
             //erase version... sadly we need to place it in the beginning
-            self->tmp_read.erase(self->tmp_read.begin(), self->tmp_read.begin()+8);
+            self->tmp_read.erase(self->tmp_read.begin(), self->tmp_read.begin());
             self->tmp_read.insert(self->tmp_read.end(), self->currentBuffer->begin(), self->currentBuffer->end());
             //append current file content
             successCallback(self->tmp_read);

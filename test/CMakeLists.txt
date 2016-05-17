@@ -17,6 +17,7 @@ find_package(Boost 1.54 REQUIRED COMPONENTS system filesystem)
 #
 
 set(CYNNYPP_SRC_DIR ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR})
+set(CYNNYPP_TEST_DIR ${CMAKE_SOURCE_DIR}/${PROJECT_TEST_DIR})
 
 # list all source files inside the src dir
 file(GLOB_RECURSE COMMON_TEST_SOURCES ${CYNNYPP_SRC_DIR}/*.cpp)
@@ -29,6 +30,7 @@ add_library(${COMMON_TEST_LIBRARY} STATIC ${COMMON_TEST_SOURCES})
 target_include_directories(
         ${COMMON_TEST_LIBRARY}
         PRIVATE ${CYNNYPP_SRC_DIR}
+        PRIVATE ${CYNNYPP_TEST_DIR}
 )
 
 target_link_libraries(
@@ -57,6 +59,7 @@ target_link_libraries(
 target_include_directories(
         ${TARGET_TEST_ALL}
         PRIVATE ${CYNNYPP_SRC_DIR}
+        PRIVATE ${CYNNYPP_TEST_DIR}
         PRIVATE ${Catch_INCLUDE_DIRS}
 )
 

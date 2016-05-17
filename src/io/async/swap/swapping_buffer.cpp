@@ -37,7 +37,9 @@ SwappingBuffer::SwappingBuffer(boost::asio::io_service& io, filesystem::Filesyst
 
 
 void SwappingBuffer::size(std::function<void(uint32_t)> successCallback) noexcept {
-    enqueueAndRun([this, successCallback](){ successCallback(realSize);});
+    enqueueAndRun([this, successCallback]() {
+        successCallback(realSize);
+    });
 }
 
 void SwappingBuffer::clear(std::function<void()> successCallback) noexcept { //this one i know what to do!

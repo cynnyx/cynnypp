@@ -93,7 +93,7 @@ void SwappingBufferAppend::readAll(std::function<void(const Buffer &b)> successC
         self->fs.async_read(self->path, self->tmp_read, [self, successCallback, errorCallback](auto er, auto length){
             if(er) return errorCallback({filesystem::ErrorCode::read_failure, std::string("Could not read file")+ er.what() });
 
-            self->tmp_read.erase(self->tmp_read.begin(), self->tmp_read.begin()+8);
+            self->tmp_read.erase(self->tmp_read.begin(), self->tmp_read.begin());
 
             if(!self->isOnDisk) {
                 self->tmp_read.insert(self->tmp_read.end(), self->currentBuffer->begin(), self->currentBuffer->end());
