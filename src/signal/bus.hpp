@@ -34,9 +34,6 @@ struct has_receive_member: std::false_type { };
 template<typename C, typename E>
 struct has_receive_member<C, E, void_t<decltype(std::declval<C>().receive(std::declval<E>()))>>: std::true_type { };
 
-template<typename C, typename E>
-constexpr bool has_receive_member_v = has_receive_member<C, E>::value;
-
 } // namespace details
 
 
@@ -62,14 +59,14 @@ protected:
     }
 
     template<class C>
-    std::enable_if_t<details::has_receive_member_v<C, E>>
+    std::enable_if_t<details::has_receive_member<C, E>::value>
     reg(details::choice<S-(sizeof...(O)+1), S>, std::weak_ptr<C> ptr) {
         signal.template add<C, &C::receive>(ptr);
         Base::reg(details::choice<S-sizeof...(O), S>{}, ptr);
     }
 
     template<class C>
-    std::enable_if_t<details::has_receive_member_v<C, E>>
+    std::enable_if_t<details::has_receive_member<C, E>::value>
     unreg(details::choice<S-(sizeof...(O)+1), S>, std::weak_ptr<C> ptr) {
         signal.template remove<C, &C::receive>(ptr);
         Base::unreg(details::choice<S-sizeof...(O), S>{}, ptr);
