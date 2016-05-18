@@ -113,7 +113,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
                 size_t chunkSize = 0;
                 chunkSize = 4096;
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-                auto shd = new sharedinfo(&(*ta));
+                auto shd = new sharedinfo(ta);
                 ta->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&numReads, &expectedReads, keepAlive, &expected](auto chk){
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
@@ -128,7 +128,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             size_t chunkSize = 0;
             chunkSize = 17*13*19;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-            auto shd = new sharedinfo(&(*ta));
+            auto shd = new sharedinfo(ta);
             ta->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&numReads, &expectedReads, keepAlive, &expected](auto chk){
             auto expectedBegin = expected.begin();
             auto expectedEnd = expected.end();
@@ -152,7 +152,6 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             appendContent.push_back((uint8_t) (i%256) );
         }
         auto shrd = SwappingBufferAppend::make_shared(ioService, mockFilesystem, rootDir, "/prova/prova/provafileWithAppend.txt");
-        auto &ta = *shrd;
         REQUIRE((mockFilesystem.readFile("/prova/prova/provafileWithAppend.txt") == Buffer{'c', 'o', 'n', 't', 'e', 'n', 'u', 't', 'o'}));
         Buffer expected(b.begin(), b.end());
         expected.insert(expected.end(), appendContent.begin(), appendContent.end());
@@ -160,11 +159,11 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
         int numReads = 0;
         int expectedReads = 0;
 
-        ta.append(appendContent, [&](size_t size){
+        shrd->append(appendContent, [&](size_t size){
 
 
         WHEN("The content is retrieved with a readAll, it is correct") {
-            ta.readAll([keepAlive, &b, &appendContent, &expected](auto totalFile) {
+            shrd->readAll([keepAlive, &b, &appendContent, &expected](auto totalFile) {
 
                 REQUIRE((expected.size() == totalFile.size()));
                 REQUIRE((expected == totalFile));
@@ -177,7 +176,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
         }
 
         AND_WHEN("The content is saved with version 1") {
-            ta.saveAllContents("/prova/prova/provafileWithAppend.txt", [keepAlive,&expected](){
+            shrd->saveAllContents("/prova/prova/provafileWithAppend.txt", [keepAlive,&expected](){
                 auto buf = mockFilesystem.readFile("/prova/prova/provafileWithAppend.txt");
 
 
@@ -190,7 +189,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
         }
 
         AND_WHEN("The content is saved with version 80") {
-            ta.saveAllContents("/prova/prova/provafileWithAppend.txt",  [keepAlive,&expected](){
+            shrd->saveAllContents("/prova/prova/provafileWithAppend.txt",  [keepAlive,&expected](){
                 auto buf = mockFilesystem.readFile("/prova/prova/provafileWithAppend.txt");
 
 
@@ -201,11 +200,11 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
         }
 
         AND_WHEN("The content is cleared") {
-            ta.clear([&](){
+            shrd->clear([&](){
             //need to post otherwise we won't be sure that it will not be executed before clear.
-            ta.size([&ta, &b, keepAlive](auto size) {
+            shrd->size([&shrd, &b, keepAlive](auto size) {
                 REQUIRE(((size == 0)));
-                ta.saveAllContents("/prova/prova/provafileWithAppend.txt", [keepAlive, &b]() {
+                shrd->saveAllContents("/prova/prova/provafileWithAppend.txt", [keepAlive, &b]() {
                     auto buf = mockFilesystem.readFile(
                             "/prova/prova/provafileWithAppend.txt");
                     Buffer expected{b};
@@ -223,8 +222,8 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             size_t chunkSize = 0;
             chunkSize = 4096;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-            auto shd = new sharedinfo(&ta);
-            ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](auto chk){
+            auto shd = new sharedinfo(shrd);
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](auto chk){
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
                 ChunkVerifier *verifier = nullptr;
@@ -237,8 +236,8 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             size_t chunkSize = 0;
             chunkSize = 17*13*19;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-            auto shd = new sharedinfo(&ta);
-            ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](auto chk){
+            auto shd = new sharedinfo(shrd);
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](auto chk){
             auto expectedBegin = expected.begin();
             auto expectedEnd = expected.end();
             ChunkVerifier *verifier = nullptr;
@@ -326,8 +325,8 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             size_t chunkSize = 0;
             chunkSize = 4096;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-            auto shd = new sharedinfo(&ta);
-            ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](auto chk){
+            auto shd = new sharedinfo(shrd);
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](auto chk){
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
                 ChunkVerifier *verifier = nullptr;
@@ -342,9 +341,9 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             size_t chunkSize = 0;
             chunkSize = 13*17*19;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-            auto shd = new sharedinfo(&ta);
+            auto shd = new sharedinfo(shrd);
 
-            ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](auto chk){
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](auto chk){
 
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
@@ -480,14 +479,13 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
     GIVEN("An append of size less than the swapping treshold") {
         for (auto i = 0; i < 139812; i++) { appendContent.push_back((uint8_t) (i % 256)); } //initialize buffer
         auto shrd = SwappingBufferOverwrite::make_shared(ioService, mockFilesystem, rootDir);
-        auto &to = *shrd;
         REQUIRE((mockFilesystem.readFile("/prova/prova/provaOverwrite.txt") == Buffer{'c', 'o', 'n', 't', 'e', 'n', 'u', 't', 'o'}));
-        to.append(appendContent, [&](size_t size){
+        shrd->append(appendContent, [&](size_t size){
             Buffer &expected = appendContent;
             
             WHEN("A readall is performed the content is correct") {
                 auto keepAlive = new boost::asio::io_service::work(ioService);
-                to.readAll([keepAlive, &b, &appendContent, &expected](auto totalFile) {
+                shrd->readAll([keepAlive, &b, &appendContent, &expected](auto totalFile) {
 
                     REQUIRE((expected.size() == totalFile.size()));
                     REQUIRE((expected == totalFile));
@@ -500,7 +498,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
 
             AND_WHEN("The content is saved with version 1") {
                 auto keepAlive = new boost::asio::io_service::work(ioService);
-                to.saveAllContents("/prova/prova/provaOverwrite.txt", [keepAlive,&expected](){
+                shrd->saveAllContents("/prova/prova/provaOverwrite.txt", [keepAlive,&expected](){
                     auto buf = mockFilesystem.readFile("/prova/prova/provaOverwrite.txt");
 
 
@@ -512,7 +510,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
 
             AND_WHEN("The content is saved with version 80") {
                 auto keepAlive = new boost::asio::io_service::work(ioService);
-                to.saveAllContents("/prova/prova/provaOverwrite.txt",  [keepAlive,&expected](){
+                shrd->saveAllContents("/prova/prova/provaOverwrite.txt",  [keepAlive,&expected](){
                     auto buf = mockFilesystem.readFile("/prova/prova/provaOverwrite.txt");
 
 
@@ -523,11 +521,11 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
 
             AND_WHEN("The content is cleared") {
                 auto keepAlive = new boost::asio::io_service::work(ioService);
-                to.clear([keepAlive, &to, &expected, &b](){
+                shrd->clear([keepAlive, &shrd, &expected, &b](){
                 //need to post otherwise we won't be sure that it will not be executed before clear.
-                    to.size([&to, &b, keepAlive](size_t size) {
+                    shrd->size([&shrd, &b, keepAlive](size_t size) {
                         REQUIRE((size == 0));
-                        to.saveAllContents("/prova/prova/provaOverwrite.txt", [keepAlive, &b]() {
+                        shrd->saveAllContents("/prova/prova/provaOverwrite.txt", [keepAlive, &b]() {
                             auto buf = mockFilesystem.readFile(
                                     "/prova/prova/provaOverwrite.txt");
                             Buffer expected{};
@@ -543,9 +541,9 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                 size_t chunkSize = 0;
                 chunkSize = 4096;
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-                auto shd = new sharedinfo(&to);
+                auto shd = new sharedinfo(shrd);
 
-                to.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &to, &expected, &numReads, &expectedReads](auto chk){;
+                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &shrd, &expected, &numReads, &expectedReads](auto chk){;
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
@@ -561,9 +559,9 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                 size_t chunkSize = 0;
                 chunkSize = 17*13*19;
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-                auto shd = new sharedinfo(&to);
+                auto shd = new sharedinfo(shrd);
 
-                to.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&to, &expected, keepAlive, &numReads, &expectedReads](auto chk){;
+                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, &expected, keepAlive, &numReads, &expectedReads](auto chk){;
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
@@ -646,9 +644,9 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
             size_t chunkSize = 0;
             chunkSize = 4096;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-            auto shd = new sharedinfo(&ta);
+            auto shd = new sharedinfo(shrd);
 
-            ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&ta, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](auto chk){
 
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
@@ -665,9 +663,9 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
             size_t chunkSize = 0;
             chunkSize = 17*13*19;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-            auto shd = new sharedinfo(&ta);
+            auto shd = new sharedinfo(shrd);
 
-            ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&ta, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](auto chk){
 
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
@@ -697,7 +695,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
         } catch (const ErrorCode &ec) {
             std::cout << ec.what() << std::endl;
         }
-        ta.append(appendContent, [&](auto){
+        shrd->append(appendContent, [&](auto){
             Buffer &expected = appendContent;
 
             WHEN("The content is retrieved with a readAll, it is correct") {
@@ -759,9 +757,9 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                 size_t chunkSize = 0;
                 chunkSize = 4096;
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-                auto shd = new sharedinfo(&ta);
+                auto shd = new sharedinfo(shrd);
 
-                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&ta, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](auto chk){
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
@@ -777,9 +775,9 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                 size_t chunkSize = 0;
                 chunkSize = 17*13*19;
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-                auto shd = new sharedinfo(&ta);
+                auto shd = new sharedinfo(shrd);
 
-                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&ta, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](auto chk){
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
@@ -810,7 +808,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
         } catch (const ErrorCode &ec) {
             std::cout << ec.what() << std::endl;
         }
-        ta.append(appendContent, [&](auto size){
+        shrd->append(appendContent, [&](auto size){
 
             Buffer &expected = appendContent;
 
@@ -877,7 +875,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                 auto keepAlive = new boost::asio::io_service::work(ioService);
                 size_t chunkSize = 4096;
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-                auto shd = new sharedinfo(&ta);
+                auto shd = new sharedinfo(shrd);
 
                 ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&ta, keepAlive, &numReads, &expectedReads, &expected](auto chk){
 
@@ -895,7 +893,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                 size_t chunkSize = 0;
                 chunkSize = 17*13*19;
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-                auto shd = new sharedinfo(&ta);
+                auto shd = new sharedinfo(shrd);
 
                 ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&ta, keepAlive, &numReads, &expectedReads, &expected](auto chk) {
 
@@ -990,7 +988,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                 size_t chunkSize = 0;
                 chunkSize = 4096;
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-                auto shd = new sharedinfo(shrd.get());
+                auto shd = new sharedinfo(shrd);
 
                 shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &numReads, &expectedReads, &expected](auto chk){
 
@@ -1008,7 +1006,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                 size_t chunkSize = 0;
                 chunkSize = 17*13*19;
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-                auto shd = new sharedinfo(shrd.get());
+                auto shd = new sharedinfo(shrd);
 
                 shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &numReads, &expectedReads, &expected](auto chk){
 
@@ -1092,7 +1090,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
             size_t chunkSize = 0;
             chunkSize = 4096;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-            auto shd = new sharedinfo(shrd.get());
+            auto shd = new sharedinfo(shrd);
 
             shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &expected](auto chk){
 
@@ -1109,7 +1107,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
             size_t chunkSize = 0;
             chunkSize = 17*13*19;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
-            auto shd = new sharedinfo(shrd.get());
+            auto shd = new sharedinfo(shrd);
 
             auto keepAlive = new boost::asio::io_service::work(ioService);
             shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &expected](auto chk){
@@ -1139,14 +1137,13 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
         int expectedReads = 0;
 
         auto shrd = SwappingBufferOverwrite::make_shared(ioService, mockFilesystem, rootDir);
-        auto &ta = *shrd;
-        ta.append(appendContent, [&](auto) {
+        shrd->append(appendContent, [&](auto) {
             Buffer &expected = appendContent;
 
 
             WHEN("The content is retrieved with a readAll, it is correct") {
             auto keepAlive = new boost::asio::io_service::work(ioService);
-                ta.readAll([keepAlive, &expected](auto totalFile) {
+                shrd->readAll([keepAlive, &expected](auto totalFile) {
 
                     REQUIRE((expected.size() == totalFile.size()));
                     REQUIRE((expected == totalFile));
@@ -1159,7 +1156,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
 
             AND_WHEN("The content is saved with version 1") {
             auto keepAlive = new boost::asio::io_service::work(ioService);
-                ta.saveAllContents("/prova/prova/provaOverwrite.txt", [keepAlive, &expected]() {
+                shrd->saveAllContents("/prova/prova/provaOverwrite.txt", [keepAlive, &expected]() {
                     auto buf = mockFilesystem.readFile(
                             "/prova/prova/provaOverwrite.txt");
 
@@ -1171,7 +1168,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
 
             AND_WHEN("The content is saved with version 80") {
             auto keepAlive = new boost::asio::io_service::work(ioService);
-                ta.saveAllContents("/prova/prova/provaOverwrite.txt", [keepAlive, &expected]() {
+                shrd->saveAllContents("/prova/prova/provaOverwrite.txt", [keepAlive, &expected]() {
                     auto buf = mockFilesystem.readFile(
                             "/prova/prova/provaOverwrite.txt");
 
@@ -1183,11 +1180,11 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
 
             AND_WHEN("The content is cleared") {
             auto keepAlive = new boost::asio::io_service::work(ioService);
-                ta.clear([&ta, keepAlive](){
+                shrd->clear([&shrd, keepAlive](){
                 //need to post otherwise we won't be sure that it will not be executed before clear.
-                ta.size([&ta, keepAlive](size_t size) {
+                shrd->size([&shrd, keepAlive](size_t size) {
                     REQUIRE((size == 0));
-                    ta.saveAllContents("/prova/prova/provaOverwrite.txt", [keepAlive]() {
+                    shrd->saveAllContents("/prova/prova/provaOverwrite.txt", [keepAlive]() {
                         auto buf = mockFilesystem.readFile(
                                 "/prova/prova/provaOverwrite.txt");
                         Buffer expected{};
@@ -1206,9 +1203,9 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                 size_t chunkSize = 0;
                 chunkSize = 4096;
                 expectedReads = (expected.size() + chunkSize / 2) / chunkSize;
-                auto shd = new sharedinfo(&ta);
+                auto shd = new sharedinfo(shrd);
 
-                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&ta, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](auto chk){
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
@@ -1227,9 +1224,9 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                 size_t chunkSize = 0;
                 chunkSize = 17 * 13 * 19;
                 expectedReads = (expected.size() + chunkSize / 2) / chunkSize;
-                auto shd = new sharedinfo(&ta);
+                auto shd = new sharedinfo(shrd);
 
-                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&ta, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](auto chk){
 
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();

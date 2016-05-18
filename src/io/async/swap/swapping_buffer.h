@@ -154,7 +154,7 @@ private:
 
 
 struct sharedinfo {
-    sharedinfo(SwappingBuffer *data) : data(data){}
+    sharedinfo(std::shared_ptr<SwappingBuffer> data) : data{std::move(data)} {}
     std::shared_ptr<SwappingBuffer> data;
     bool stopReading = false;
 };
