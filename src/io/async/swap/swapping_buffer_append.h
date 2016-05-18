@@ -6,7 +6,7 @@
 
 namespace cynny {
 namespace cynnypp {
-namespace swap {
+namespace swapping {
 
 class SwappingBufferAppend : public SwappingBuffer, public std::enable_shared_from_this<SwappingBufferAppend> {
 public:

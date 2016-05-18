@@ -2,7 +2,7 @@
 #include "boost/asio.hpp"
 
 
-namespace cynny { namespace cynnypp { namespace swap {
+namespace cynny { namespace cynnypp { namespace swapping {
 
 using Buffer = SwappingBuffer::Buffer;
 

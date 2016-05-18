@@ -8,7 +8,7 @@
 
 namespace cynny {
 namespace cynnypp {
-namespace swap {
+namespace swapping {
 /** TransactionBufferOverwrite is a transaction buffer used when the previous content of the referred resource has to
  * be discarded. It swaps to temporary file once a certain threshold is reached.
  *

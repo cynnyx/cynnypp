@@ -4,7 +4,7 @@
 
 namespace cynny {
 namespace cynnypp {
-namespace swap {
+namespace swapping {
 
 
 SwappingBufferOverwrite::SwappingBufferOverwrite(boost::asio::io_service& io, filesystem::FilesystemManagerInterface& fs, const std::string& root_dir)

@@ -7,7 +7,7 @@
 #define DISK_MOVE_SIZE 4096*64
 #endif
 
-namespace cynny { namespace cynnypp { namespace swap {
+namespace cynny { namespace cynnypp { namespace swapping {
 
 SwappingBufferAppend::SwappingBufferAppend(boost::asio::io_service& io,
                                            filesystem::FilesystemManagerInterface& fs,
