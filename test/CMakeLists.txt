@@ -40,8 +40,8 @@ target_link_libraries(
 
 
 # list all source files inside the test dir
-file(GLOB_RECURSE TARGET_TEST_ALL_SOURCES *.cpp)
-
+file(GLOB_RECURSE TARGET_TEST_ALL_SOURCES [a-z][^w]*.cpp)
+message(${TARGET_TEST_ALL_SOURCES})
 #test ALL
 set(TARGET_TEST_ALL test_all)
 add_executable(${CYNNYPP_TEST_ALL} ${TARGET_TEST_ALL_SOURCES})
