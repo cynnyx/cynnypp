@@ -7,7 +7,7 @@
 
 namespace cynny {
 namespace cynnypp {
-namespace swap {
+namespace swapping {
 uint64_t SwappingBuffer::currentTransactionId = 0;
 
 

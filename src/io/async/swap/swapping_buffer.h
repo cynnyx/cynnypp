@@ -23,7 +23,7 @@ class io_service;
 
 namespace cynny {
 namespace cynnypp {
-namespace swap {
+namespace swapping {
 
 struct sharedinfo;
 class CacheChunkedReader;

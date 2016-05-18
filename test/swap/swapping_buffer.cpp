@@ -41,7 +41,7 @@ struct ChunkVerifier {
 };
 
 
-using namespace cynny::cynnypp::swap;
+using namespace cynny::cynnypp::swapping;
 
 int numOps = 0;
 int prevNumOps = 0;

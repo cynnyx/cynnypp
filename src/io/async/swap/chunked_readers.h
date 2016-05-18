@@ -18,7 +18,7 @@ namespace cynnypp {
 /** @brief contains the auxiliary data structures used by the transaction manager or its nested components.
  *
  */
-namespace swap {
+namespace swapping {
 
 /** CacheChunkedReader is a chunked reader which returns chunk by chunk the data contained in a portion of the memory.
  * It is used by the transaction buffer in order to return the content to the user when it is not big enough to be

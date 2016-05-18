@@ -150,7 +150,6 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 # Referenced directories and targets
 #
 
-set(TARGET_CYNNYPP cynnypp)
 set(CYNNYPP_TEST_ALL test_all)
 set(TARGET_DOCS docs)
 
