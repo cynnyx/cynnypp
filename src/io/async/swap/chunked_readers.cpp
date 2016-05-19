@@ -26,8 +26,7 @@ void CacheChunkedReader::next_chunk(filesystem::FilesystemManagerInterface::Read
         return;
     }
     //creates a copy of the data
-    Buffer read{beg, end};
-    h(ec, std::move(read));
+    io.post(std::bind(h, ec, Buffer{beg, end}));
 }
 
 
