@@ -33,7 +33,7 @@ public:
      */
     TimerId scheduleCallback(std::function<void()> && cb, std::chrono::milliseconds ms) {
         auto timer = new boost::asio::deadline_timer{io, boost::posix_time::milliseconds(ms.count())};
-        timer->async_wait([cb = std::move(cb), timer](const boost::system::error_code &deleted){if(!deleted){cb();} delete timer; });
+        timer->async_wait([cb, timer](const boost::system::error_code &deleted){if(!deleted){cb();} delete timer; });
         return reinterpret_cast<uintptr_t>(timer);
     }
 

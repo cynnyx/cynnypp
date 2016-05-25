@@ -43,7 +43,7 @@ SwappingBufferOverwriteChunkedReader::SwappingBufferOverwriteChunkedReader(boost
 
 void SwappingBufferOverwriteChunkedReader::next_chunk(filesystem::FilesystemManagerInterface::ReadChunkHandler h) {
     if(!tmp_file_finished) { //in this case we're swapping! hence the first thing we do is performing a next chunk on it.
-        tmp_file->next_chunk([this, h](auto ec, auto data){
+        tmp_file->next_chunk([this, h](const filesystem::ErrorCode& ec, Buffer data){
             if(ec == filesystem::ErrorCode::end_of_file || ec == filesystem::ErrorCode::stopped) { //it has finished!
                 tmp_file_finished = true;
                 //prepare next file.
@@ -85,7 +85,7 @@ SwappingBufferAppendChunkedReader::SwappingBufferAppendChunkedReader(boost::asio
 
 void SwappingBufferAppendChunkedReader::next_chunk(filesystem::FilesystemManagerInterface::ReadChunkHandler h) {
     if(!file_finished) { //read from original file.
-        file->next_chunk([this, h](auto ec, auto data){
+        file->next_chunk([this, h](const filesystem::ErrorCode& ec, Buffer data){
             if(ec == filesystem::ErrorCode::end_of_file || ec == filesystem::ErrorCode::stopped) {
                 file_finished = true;
                 //the file has finished: start reading from the swapping one.
@@ -103,7 +103,7 @@ void SwappingBufferAppendChunkedReader::next_chunk(filesystem::FilesystemManager
     } else {
         //same as in the transaction overwrite buffer chunked reader. 
         if(!tmp_file_finished) {
-            tmp_file->next_chunk([this, h](auto ec, auto data){
+            tmp_file->next_chunk([this, h](const filesystem::ErrorCode& ec, Buffer data){
                 if(ec == filesystem::ErrorCode::end_of_file || ec == filesystem::ErrorCode::stopped) { //it has finished!
                     tmp_file_finished = true;
                     //prepare next file.

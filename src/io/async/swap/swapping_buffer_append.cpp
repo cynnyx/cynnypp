@@ -80,7 +80,7 @@ void SwappingBufferAppend::saveAllContents(const std::string &destinationPath, s
 
 void SwappingBufferAppend::swappingOperation(std::function<void()> successCallback, std::function<void(const filesystem::ErrorCode&)> errorCallback) {
     auto self = this->shared_from_this();
-    self->fs.async_append(tmp_path, *swappingBuffer, [self, successCallback, errorCallback](auto ec, auto length){
+    self->fs.async_append(tmp_path, *swappingBuffer, [self, successCallback, errorCallback](const filesystem::ErrorCode& ec, size_t length) {
         self->postSwapRoutine(ec, length, successCallback, errorCallback);
     });
 
@@ -90,7 +90,7 @@ void SwappingBufferAppend::readAll(std::function<void(const Buffer &b)> successC
     auto self = this->shared_from_this();
     enqueueAndRun([self, successCallback, errorCallback](){
 
-        self->fs.async_read(self->path, self->tmp_read, [self, successCallback, errorCallback](auto er, auto length){
+        self->fs.async_read(self->path, self->tmp_read, [self, successCallback, errorCallback](const filesystem::ErrorCode& er, size_t length) {
             if(er) return errorCallback({filesystem::ErrorCode::read_failure, std::string("Could not read file")+ er.what() });
 
             self->tmp_read.erase(self->tmp_read.begin(), self->tmp_read.begin());

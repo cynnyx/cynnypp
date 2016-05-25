@@ -112,7 +112,7 @@ void MockFilesystem::appendToFile(const Path& p, const Buffer& bytes) {
 }
 
 void MockFilesystem::async_read(const Path& path, Buffer& buf, FilesystemManagerInterface::CompletionHandler h) {
-    timerManager.scheduleCallback([h(std::move(h)), &buf, path, this](){
+    timerManager.scheduleCallback([h, &buf, path, this](){
         try {
             buf = readFile(path);
             h(ErrorCode::success, buf.size());
@@ -123,14 +123,14 @@ void MockFilesystem::async_read(const Path& path, Buffer& buf, FilesystemManager
 }
 
 void MockFilesystem::async_write(const Path& p, const Buffer& buf, FilesystemManagerInterface::CompletionHandler h) {
-    timerManager.scheduleCallback([h(std::move(h)), buf, p, this](){
+    timerManager.scheduleCallback([h, buf, p, this](){
         writeFile(p, buf);
         h(ErrorCode::success, buf.size());
     }, std::chrono::milliseconds(default_fs_simulated_timeout));
 }
 
 void MockFilesystem::async_append(const Path &p, const Buffer &buf, FilesystemManagerInterface::CompletionHandler h) {
-    timerManager.scheduleCallback([h(std::move(h)), buf, p, this](){
+    timerManager.scheduleCallback([h, buf, p, this](){
         appendToFile(p, buf);
         h(ErrorCode::success, buf.size());
     }, std::chrono::milliseconds(default_fs_simulated_timeout));

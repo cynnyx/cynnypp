@@ -59,14 +59,14 @@ protected:
     }
 
     template<class C>
-    std::enable_if_t<details::has_receive_member<C, E>::value>
+    typename std::enable_if<details::has_receive_member<C, E>::value>::type
     reg(details::choice<S-(sizeof...(O)+1), S>, std::weak_ptr<C> ptr) {
         signal.template add<C, &C::receive>(ptr);
         Base::reg(details::choice<S-sizeof...(O), S>{}, ptr);
     }
 
     template<class C>
-    std::enable_if_t<details::has_receive_member<C, E>::value>
+    typename std::enable_if<details::has_receive_member<C, E>::value>::type
     unreg(details::choice<S-(sizeof...(O)+1), S>, std::weak_ptr<C> ptr) {
         signal.template remove<C, &C::receive>(ptr);
         Base::unreg(details::choice<S-sizeof...(O), S>{}, ptr);

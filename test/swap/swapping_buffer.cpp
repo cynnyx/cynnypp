@@ -4,6 +4,8 @@
 #include "io/async/swap/swapping_buffer_overwrite.h"
 #include "boost/asio.hpp"
 
+using cynny::cynnypp::filesystem::ErrorCode;
+
 struct ChunkVerifier {
     ChunkVerifier(int &numReads, int expectedReads, std::shared_ptr<ChunkedFstreamInterface> chk, std::function<void()> onEnd,
                   Buffer::iterator &begin, Buffer::iterator &end, boost::asio::io_service& io) :
@@ -29,7 +31,7 @@ struct ChunkVerifier {
         REQUIRE((i == data.end())); //consume all data without failing.
         //then call nex-chunkk.
         if(!ec) {
-            io.post([this](){chk->next_chunk([this](auto ec, auto data){ this->readHandler(ec, data);});});
+            io.post([this](){chk->next_chunk([this](const ErrorCode& ec, Buffer data){ this->readHandler(ec, data);});});
         } else {
             REQUIRE((begin == end)); //consumed.
             if(begin == end) {
@@ -74,11 +76,11 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
         auto keepAlive = new boost::asio::io_service::work(ioService);
         ta->append(appendContent, [keepAlive, &b, &appendContent, &expected, &numReads, &expectedReads, ta](size_t size) {
             WHEN("The content is retrieved with a readAll, it is correct") {
-                ta->readAll([keepAlive, &b, &appendContent, &expected](auto totalFile) {
+                ta->readAll([keepAlive, &b, &appendContent, &expected](Buffer totalFile) {
                     REQUIRE((expected == totalFile));
                     ++numOps;
                     delete keepAlive;
-                }, [](auto er) {
+                }, [](const ErrorCode& er) {
                     std::cout << er.what() << std::endl;
                     FAIL("Read operation should not fail on append buffer.");
                 });
@@ -90,7 +92,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
                     REQUIRE((expected == buf));
                     ++numOps;
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](ErrorCode){ FAIL("The transactionappendbuffer should be able to write down the data."); });
             }
 
             AND_WHEN("The content is cleared") {
@@ -103,7 +105,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
                                 REQUIRE((expected == buf));
                                 ++numOps;
                                 delete keepAlive;
-                            }, [](auto te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
+                            }, [](ErrorCode te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
 
                         });
 
@@ -114,13 +116,13 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
                 chunkSize = 4096;
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
                 auto shd = new sharedinfo(ta);
-                ta->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&numReads, &expectedReads, keepAlive, &expected](auto chk){
+                ta->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&numReads, &expectedReads, keepAlive, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
                     ChunkVerifier *verifier = nullptr;
                     verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; ++numOps; delete keepAlive;  },  expectedBegin, expectedEnd, ioService);
-                    chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-                }, [](auto){FAIL("Make chunked stream is not expectetd to fail.");});
+                    chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+                }, [](ErrorCode){FAIL("Make chunked stream is not expectetd to fail.");});
 
             }
 
@@ -129,16 +131,16 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             chunkSize = 17*13*19;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
             auto shd = new sharedinfo(ta);
-            ta->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&numReads, &expectedReads, keepAlive, &expected](auto chk){
+            ta->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&numReads, &expectedReads, keepAlive, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
             auto expectedBegin = expected.begin();
             auto expectedEnd = expected.end();
             ChunkVerifier *verifier = nullptr;
             verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; ++numOps; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-            chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-            }, [](auto){FAIL("Make chunked stream is not expectetd to fail.");});
+            chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+            }, [](ErrorCode){FAIL("Make chunked stream is not expectetd to fail.");});
 
             }
-        }, [](auto){});
+        }, [](ErrorCode){});
 
         ioService.run();
         REQUIRE(numOps == prevNumOps+1); //ensure one operation is always performed.
@@ -163,13 +165,13 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
 
 
         WHEN("The content is retrieved with a readAll, it is correct") {
-            shrd->readAll([keepAlive, &b, &appendContent, &expected](auto totalFile) {
+            shrd->readAll([keepAlive, &b, &appendContent, &expected](Buffer totalFile) {
 
                 REQUIRE((expected.size() == totalFile.size()));
                 REQUIRE((expected == totalFile));
                 numOps++;
                 delete keepAlive;
-            }, [](auto er) {
+            }, [](ErrorCode er) {
                 std::cout << er.what() << std::endl;
                 FAIL("Read operation should not fail on append buffer.");
             });
@@ -184,7 +186,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
                 REQUIRE((expected == buf));
                 ++numOps;
                 delete keepAlive;
-            }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+            }, [](ErrorCode){ FAIL("The transactionappendbuffer should be able to write down the data."); });
 
         }
 
@@ -196,13 +198,13 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
                 REQUIRE((expected == buf));
                 ++numOps;
                 delete keepAlive;
-            }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+            }, [](ErrorCode){ FAIL("The transactionappendbuffer should be able to write down the data."); });
         }
 
         AND_WHEN("The content is cleared") {
             shrd->clear([&](){
             //need to post otherwise we won't be sure that it will not be executed before clear.
-            shrd->size([&shrd, &b, keepAlive](auto size) {
+            shrd->size([&shrd, &b, keepAlive](size_t size) {
                 REQUIRE(((size == 0)));
                 shrd->saveAllContents("/prova/prova/provafileWithAppend.txt", [keepAlive, &b]() {
                     auto buf = mockFilesystem.readFile(
@@ -212,7 +214,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
                     REQUIRE( (expected == buf) );
                     ++numOps;
                     delete keepAlive;
-                }, [](auto te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
+                }, [](ErrorCode te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
             });
             });
         }
@@ -223,13 +225,13 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             chunkSize = 4096;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
             auto shd = new sharedinfo(shrd);
-            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](auto chk){
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](std::shared_ptr<ChunkedFstreamInterface> chk){
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
                 ChunkVerifier *verifier = nullptr;
                 verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; ++numOps; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-            }, [](auto){});
+                chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+            }, [](ErrorCode){});
         }
 
         AND_WHEN("We create a chunked reader with chunk size dividing swap size") {
@@ -237,16 +239,16 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             chunkSize = 17*13*19;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
             auto shd = new sharedinfo(shrd);
-            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](auto chk){
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](std::shared_ptr<ChunkedFstreamInterface> chk){
             auto expectedBegin = expected.begin();
             auto expectedEnd = expected.end();
             ChunkVerifier *verifier = nullptr;
             verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; ++numOps; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-            chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-            }, [](auto){});
+            chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+            }, [](ErrorCode){});
             }
         
-        }, [](auto te){}); //end of append
+        }, [](const ErrorCode& te){}); //end of append
 
         ioService.run();
         REQUIRE(numOps == prevNumOps+1); //ensure one operation is always performed.
@@ -269,12 +271,12 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
         auto keepAlive = new boost::asio::io_service::work(ioService);
         ta.append(appendContent, [&](size_t size){
         WHEN("The content is retrieved with a readAll, it is correct") {
-            ta.readAll([keepAlive, &b, &appendContent, &expected](auto totalFile) {
+            ta.readAll([keepAlive, &b, &appendContent, &expected](Buffer totalFile) {
                 REQUIRE((expected.size() == totalFile.size()));
                 REQUIRE((expected == totalFile));
                 ++numOps;
                 delete keepAlive;
-            }, [](auto er) {
+            }, [](ErrorCode er) {
                 std::cout << er.what() << std::endl;
                 FAIL("Read operation should not fail on append buffer.");
             });
@@ -287,7 +289,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
 
                 REQUIRE((expected == buf));++numOps;
                 delete keepAlive;
-            }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+            }, [](ErrorCode){ FAIL("The transactionappendbuffer should be able to write down the data."); });
 
         }
 
@@ -298,7 +300,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
 
                 REQUIRE((expected == buf));++numOps;
                 delete keepAlive;
-            }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+            }, [](ErrorCode){ FAIL("The transactionappendbuffer should be able to write down the data."); });
         }
 
         AND_WHEN("The content is cleared") {
@@ -314,7 +316,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
                     REQUIRE( (expected == buf ));
                     ++numOps;
                     delete keepAlive;
-                }, [](auto te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
+                }, [](ErrorCode te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
             });
             });
         }
@@ -326,13 +328,13 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             chunkSize = 4096;
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
             auto shd = new sharedinfo(shrd);
-            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](auto chk){
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](std::shared_ptr<ChunkedFstreamInterface> chk){
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
                 ChunkVerifier *verifier = nullptr;
                 verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; ++numOps;delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-            }, [](auto re){});
+                chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+            }, [](const ErrorCode& re){});
             
         }
 
@@ -343,17 +345,17 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
             auto shd = new sharedinfo(shrd);
 
-            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](auto chk){
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&](std::shared_ptr<ChunkedFstreamInterface> chk){
 
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
                 ChunkVerifier *verifier = nullptr;
                 verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; ++numOps;delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-            }, [](auto re){});
+                chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+            }, [](ErrorCode re){});
             
         }
-        }, [](auto te){}); 
+        }, [](ErrorCode te){}); 
 
         ioService.run();
         REQUIRE(numOps == prevNumOps +1 );
@@ -382,14 +384,14 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             WHEN("The content is retrieved with a readAll") {
                 auto keepAlive = new boost::asio::io_service::work(ioService); nothing = false;
                 REQUIRE(true);
-                ta.readAll([keepAlive, &b, &appendContent, &expected](auto totalFile) {
+                ta.readAll([keepAlive, &b, &appendContent, &expected](Buffer totalFile) {
                     THEN("It is correct") {
                         REQUIRE((expected.size() == totalFile.size()));
                         REQUIRE((expected == totalFile));  
                     }
                     delete keepAlive;
                     numOps++;
-                }, [](auto er) {
+                }, [](ErrorCode er) {
                     std::cout << er.what() << std::endl;
                     FAIL("Read operation should not fail on append buffer.");
                 });
@@ -398,7 +400,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
             AND_WHEN("The content is saved with version 1") {
                 auto keepAlive = new boost::asio::io_service::work(ioService);nothing = false;
                 REQUIRE(true);
-                ta.size([=](auto sz){ std::cout << appendSize << " vs " << sz << std::endl;});
+                ta.size([=](size_t sz){ std::cout << appendSize << " vs " << sz << std::endl;});
                 ta.saveAllContents("/prova/prova/provafileWithAppend.txt", [keepAlive,&expected](){
                     auto buf = mockFilesystem.readFile("/prova/prova/provafileWithAppend.txt");
 
@@ -406,7 +408,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
                     REQUIRE(expected.size() == buf.size());
                     REQUIRE((expected == buf)); numOps++;
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](ErrorCode){ FAIL("The transactionappendbuffer should be able to write down the data."); });
 
             }
 
@@ -419,7 +421,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
 
                     REQUIRE((expected == buf)); numOps++;
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](ErrorCode){ FAIL("The transactionappendbuffer should be able to write down the data."); });
             }
 
             AND_WHEN("The content is cleared") {
@@ -428,7 +430,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
                 ta.clear([&](){
                     std::cout << "cleared" << std::endl;
                 //need to post otherwise we won't be sure that it will not be executed before clear.
-                    ta.size([&ta, &b, keepAlive](auto sz) {
+                    ta.size([&ta, &b, keepAlive](size_t sz) {
                         std::cout << "found size" << sz <<  std::endl;
                         REQUIRE(((sz == 0)));
                         ta.saveAllContents("/prova/prova/provafileWithAppend.txt", [keepAlive, &b]() {
@@ -437,7 +439,7 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
                             REQUIRE((expected.size() == buf.size())); 
                             REQUIRE( (expected == buf) ); numOps++;
                             delete keepAlive;
-                        }, [](auto te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
+                        }, [](ErrorCode te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
                     });
                 }); 
             }
@@ -447,14 +449,14 @@ TEST_CASE("Append Buffer", "[swapping_buffer][sb]") {
 
                 if(size >= appendSize-13) { //reached end!
                     Buffer b{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-                    ta.append(b, testLambda, [](auto te){ FAIL("Append should not fail!");});
+                    ta.append(b, testLambda, [](const ErrorCode& te){ FAIL("Append should not fail!");});
                 } else {
 
-                    ta.append(appendContent, appendFunction, [](auto te){});
+                    ta.append(appendContent, appendFunction, [](const ErrorCode& te){});
                 }
         };
 
-        ta.append(appendContent, appendFunction, [](auto){}); //appendi ogni volta
+        ta.append(appendContent, appendFunction, [](const ErrorCode&){}); //appendi ogni volta
 
         ioService.run();
         REQUIRE((numOps == prevNumOps+1 || nothing));
@@ -485,12 +487,12 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
             
             WHEN("A readall is performed the content is correct") {
                 auto keepAlive = new boost::asio::io_service::work(ioService);
-                shrd->readAll([keepAlive, &b, &appendContent, &expected](auto totalFile) {
+                shrd->readAll([keepAlive, &b, &appendContent, &expected](Buffer totalFile) {
 
                     REQUIRE((expected.size() == totalFile.size()));
                     REQUIRE((expected == totalFile));
                     delete keepAlive;
-                }, [](auto er) {
+                }, [](const ErrorCode& er) {
                     std::cout << er.what() << std::endl;
                     FAIL("Read operation should not fail on overwrite buffer.");
                 });
@@ -504,7 +506,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
 
                     REQUIRE((expected == buf));
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
 
             }
 
@@ -516,7 +518,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
 
                     REQUIRE((expected == buf));
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
             }
 
             AND_WHEN("The content is cleared") {
@@ -531,7 +533,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                             Buffer expected{};
                             REQUIRE((expected == buf));
                             delete keepAlive;
-                        }, [](auto te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
+                        }, [](const ErrorCode& te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
                     });
                 });
             }
@@ -543,14 +545,14 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
                 auto shd = new sharedinfo(shrd);
 
-                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &shrd, &expected, &numReads, &expectedReads](auto chk){;
+                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &shrd, &expected, &numReads, &expectedReads](std::shared_ptr<ChunkedFstreamInterface> chk){;
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
                     ChunkVerifier *verifier = nullptr;
                     verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                    chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-                }, [](auto){ FAIL("NOT OK."); });
+                    chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+                }, [](const ErrorCode&){ FAIL("NOT OK."); });
             }
 
 
@@ -561,16 +563,16 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
                 auto shd = new sharedinfo(shrd);
 
-                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, &expected, keepAlive, &numReads, &expectedReads](auto chk){;
+                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, &expected, keepAlive, &numReads, &expectedReads](std::shared_ptr<ChunkedFstreamInterface> chk){;
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
                     ChunkVerifier *verifier = nullptr;
                     verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                    chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-                }, [](auto){FAIL("Chunked stream creation should not fail.");});
+                    chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+                }, [](const ErrorCode&){ FAIL("Chunked stream creation should not fail.");});
             }
-        }, [](auto){ FAIL("Append should not fail!");});
+        }, [](const ErrorCode&){ FAIL("Append should not fail!");});
 
         ioService.run();
     }
@@ -591,11 +593,11 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
 
         WHEN("The content is retrieved with a readAll, it is correct") {
             auto keepAlive = new boost::asio::io_service::work(ioService);
-            ta.readAll([keepAlive, &b, &appendContent, &expected](auto totalFile) {
+            ta.readAll([keepAlive, &b, &appendContent, &expected](Buffer totalFile) {
                 REQUIRE((expected.size() == totalFile.size()));
                 REQUIRE((expected == totalFile));
                 delete keepAlive;
-            }, [](auto er) {
+            }, [](ErrorCode er) {
                 std::cout << er.what() << std::endl;
                 FAIL("Read operation should not fail on append buffer.");
             });
@@ -609,7 +611,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
 
                 REQUIRE((expected == buf));
                 delete keepAlive;
-            }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+            }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
         }
 
         AND_WHEN("The content is saved with version 80") {
@@ -620,7 +622,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
 
                 REQUIRE((expected == buf));
                 delete keepAlive;
-            }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+            }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
         }
 
         AND_WHEN("The content is cleared") {
@@ -634,7 +636,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                         Buffer expected{};
                         REQUIRE((expected == buf));
                         delete keepAlive;
-                    }, [](auto te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
+                    }, [](const ErrorCode& te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
                 });
             });
         }
@@ -646,14 +648,14 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
             auto shd = new sharedinfo(shrd);
 
-            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
 
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
                 ChunkVerifier *verifier = nullptr;
                 verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-            }, [](auto){ FAIL("Make chunked reader should not fail");});
+                chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+            }, [](const ErrorCode&){ FAIL("Make chunked reader should not fail");});
 
         }
 
@@ -665,17 +667,17 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
             auto shd = new sharedinfo(shrd);
 
-            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
 
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
                 ChunkVerifier *verifier = nullptr;
                 verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-            }, [](auto){FAIL("Make chunked reader should not fail");});
+                chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+            }, [](const ErrorCode&){ FAIL("Make chunked reader should not fail");});
         }
 
-        }, [](auto){ FAIL("Append should not fail.");});
+        }, [](const ErrorCode&){ FAIL("Append should not fail.");});
         ioService.run();
     }
 
@@ -695,17 +697,17 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
         } catch (const ErrorCode &ec) {
             std::cout << ec.what() << std::endl;
         }
-        shrd->append(appendContent, [&](auto){
+        shrd->append(appendContent, [&](uint32_t){
             Buffer &expected = appendContent;
 
             WHEN("The content is retrieved with a readAll, it is correct") {
                 auto keepAlive = new boost::asio::io_service::work(ioService);
-                ta.readAll([keepAlive, &b, &appendContent, &expected](auto totalFile) {
+                ta.readAll([keepAlive, &b, &appendContent, &expected](Buffer totalFile) {
 
                     REQUIRE((expected.size() == totalFile.size()));
                     REQUIRE((expected == totalFile));
                     delete keepAlive;
-                }, [](auto er) {
+                }, [](const ErrorCode& er) {
                     std::cout << er.what() << std::endl;
                     FAIL("Read operation should not fail on append buffer.");
                 });
@@ -719,7 +721,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
 
                     REQUIRE((expected == buf));
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
             }
 
             AND_WHEN("The content is saved with version 80") {
@@ -730,7 +732,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
 
                     REQUIRE((expected == buf));
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
             }
 
             AND_WHEN("The content is cleared") {
@@ -745,7 +747,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                             Buffer expected{};
                             REQUIRE((expected == buf));
                             delete keepAlive;
-                        }, [](auto te) {
+                        }, [](const ErrorCode& te) {
                             FAIL("The transactionappendbuffer should be able to avoid to write down the data :D");
                         });
                     });
@@ -759,14 +761,14 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
                 auto shd = new sharedinfo(shrd);
 
-                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
                     ChunkVerifier *verifier = nullptr;
                     verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                    chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-                }, [](auto){FAIL("Make chunked reader should not fail.");});
+                    chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+                }, [](const ErrorCode&){ FAIL("Make chunked reader should not fail.");});
             }
 
 
@@ -777,17 +779,17 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
                 auto shd = new sharedinfo(shrd);
 
-                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
                     ChunkVerifier *verifier = nullptr;
                     verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                    chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-                }, [](auto){FAIL("Make chunked reader should not fail");});
+                    chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+                }, [](const ErrorCode&){ FAIL("Make chunked reader should not fail");});
             }
 
-        }, [](auto){FAIL("Append should not fail");});
+        }, [](const ErrorCode&){ FAIL("Append should not fail");});
 
         ioService.run();
     }
@@ -808,19 +810,19 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
         } catch (const ErrorCode &ec) {
             std::cout << ec.what() << std::endl;
         }
-        shrd->append(appendContent, [&](auto size){
+        shrd->append(appendContent, [&](size_t size){
 
             Buffer &expected = appendContent;
 
 
             WHEN("The content is retrieved with a readAll, it is correct") {
                 auto keepAlive = new boost::asio::io_service::work(ioService);
-                ta.readAll([keepAlive, &b, &appendContent, &expected](auto totalFile) {
+                ta.readAll([keepAlive, &b, &appendContent, &expected](Buffer totalFile) {
 
                     REQUIRE((expected.size() == totalFile.size()));
                     REQUIRE((expected == totalFile));
                     delete keepAlive;
-                }, [](auto er) {
+                }, [](const ErrorCode& er) {
                     std::cout << er.what() << std::endl;
                     FAIL("Read operation should not fail on append buffer.");
                 });
@@ -834,7 +836,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
 
                     REQUIRE((expected == buf));
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
             }
 
             AND_WHEN("The content is saved with version 80") {
@@ -845,7 +847,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
 
                     REQUIRE((expected == buf));
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
             }
 
             AND_WHEN("The content is cleared") {
@@ -860,7 +862,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                             Buffer expected{};
                             REQUIRE((expected == buf));
                             delete keepAlive;
-                        }, [](auto te) {
+                        }, [](const ErrorCode& te) {
                             FAIL("The transactionappendbuffer should be able to avoid to write down the data :D");
                         });
                     });
@@ -877,14 +879,14 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
                 auto shd = new sharedinfo(shrd);
 
-                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&ta, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&ta, keepAlive, &numReads, &expectedReads, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
                     ChunkVerifier *verifier = nullptr;
                     verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                    chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-                }, [](auto){ FAIL("chunked reader creation");});
+                    chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+                }, [](const ErrorCode&){ FAIL("chunked reader creation");});
             }
 
 
@@ -895,7 +897,7 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
                 auto shd = new sharedinfo(shrd);
 
-                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&ta, keepAlive, &numReads, &expectedReads, &expected](auto chk) {
+                ta.make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&ta, keepAlive, &numReads, &expectedReads, &expected](std::shared_ptr<ChunkedFstreamInterface> chk) {
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
@@ -904,10 +906,10 @@ TEST_CASE("Overwrite Buffer on existing file", "[swapping_buffer][sb]"){
                         delete verifier;
                         delete keepAlive;
                     }, expectedBegin, expectedEnd, ioService);
-                    chk->next_chunk([verifier](auto ec, auto data) { verifier->readHandler(ec, data); });
-                }, [](auto){ FAIL("Should not fail while creating");});
+                    chk->next_chunk([verifier](const ErrorCode& ec, Buffer data) { verifier->readHandler(ec, data); });
+                }, [](const ErrorCode&){ FAIL("Should not fail while creating");});
             }
-        }, [](auto){FAIL("Append should not fail "); });
+        }, [](const ErrorCode&){ FAIL("Append should not fail "); });
         ioService.run();
     }
 
@@ -926,17 +928,17 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
         auto shrd = SwappingBufferOverwrite::make_shared(ioService, mockFilesystem, rootDir);
         int numReads = 0;
         int expectedReads = 0;
-        shrd->append(appendContent, [&](auto){
+        shrd->append(appendContent, [&](uint32_t){
         Buffer &expected = appendContent;
 
 
             WHEN("A readall is performed the content is correct") {
                 auto keepAlive = new boost::asio::io_service::work(ioService);
-                shrd->readAll([keepAlive, &appendContent, &expected](auto totalFile) {
+                shrd->readAll([keepAlive, &appendContent, &expected](Buffer totalFile) {
                     REQUIRE((expected.size() == totalFile.size()));
                     REQUIRE((expected == totalFile));
                     delete keepAlive;
-                }, [](auto er) {
+                }, [](const ErrorCode& er) {
                     std::cout << er.what() << std::endl;
                     FAIL("Read operation should not fail on overwrite buffer.");
                 });
@@ -950,7 +952,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
 
                     REQUIRE((expected == buf));
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
 
             }
 
@@ -962,7 +964,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
 
                     REQUIRE((expected == buf));
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
             }
 
             AND_WHEN("The content is cleared") {
@@ -977,7 +979,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                             Buffer expected{};
                             REQUIRE((expected == buf));
                             delete keepAlive;
-                        }, [](auto te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
+                        }, [](const ErrorCode& te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
                     });
                 });
             }
@@ -990,14 +992,14 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
                 auto shd = new sharedinfo(shrd);
 
-                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &numReads, &expectedReads, &expected](auto chk){
+                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &numReads, &expectedReads, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
                     ChunkVerifier *verifier = nullptr;
                     verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                    chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-                }, [&](auto){ FAIL("Faialed to make chunked reader");});
+                    chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+                }, [&](ErrorCode){ FAIL("Faialed to make chunked reader");});
             }
 
 
@@ -1008,17 +1010,17 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                 expectedReads = (expected.size() + chunkSize/2)/chunkSize;
                 auto shd = new sharedinfo(shrd);
 
-                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &numReads, &expectedReads, &expected](auto chk){
+                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &numReads, &expectedReads, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
                     ChunkVerifier *verifier = nullptr;
                     verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                    chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-                }, [&](auto){FAIL("Failure to make chunked reader");});
+                    chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+                }, [&](ErrorCode){FAIL("Failure to make chunked reader");});
             }
 
-        }, [](auto){FAIL("Should not fail appending");});
+        }, [](const ErrorCode&){ FAIL("Should not fail appending");});
         ioService.run();
     }
 
@@ -1030,17 +1032,17 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
         }
         auto shrd = SwappingBufferOverwrite::make_shared(ioService, mockFilesystem, rootDir);
 //        auto &ta = *shrd;
-        shrd->append(appendContent, [&, shrd](auto){
+        shrd->append(appendContent, [&, shrd](uint32_t){
         Buffer &expected = appendContent;
 
         WHEN("The content is retrieved with a readAll, it is correct") {
             auto keepAlive = new boost::asio::io_service::work(ioService);
-            shrd->readAll([keepAlive, &appendContent, &expected](auto totalFile) {
+            shrd->readAll([keepAlive, &appendContent, &expected](Buffer totalFile) {
 
                 REQUIRE((expected.size() == totalFile.size()));
                 REQUIRE((expected == totalFile));
                 delete keepAlive;
-            }, [](auto er) {
+            }, [](const ErrorCode& er) {
                 std::cout << er.what() << std::endl;
                 FAIL("Read operation should not fail on append buffer.");
             });
@@ -1054,7 +1056,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
 
                 REQUIRE((expected == buf));
                 delete keepAlive;
-            }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+            }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
         }
 
         AND_WHEN("The content is saved with version 80") {
@@ -1065,7 +1067,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
 
                 REQUIRE((expected == buf));
                 delete keepAlive;
-            }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+            }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
         }
 
         AND_WHEN("The content is cleared") {
@@ -1080,7 +1082,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                         Buffer expected{};
                         REQUIRE((expected == buf));
                         delete keepAlive;
-                    }, [](auto te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
+                    }, [](const ErrorCode& te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
                 });
             });
         }
@@ -1092,14 +1094,14 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
             expectedReads = (expected.size() + chunkSize/2)/chunkSize;
             auto shd = new sharedinfo(shrd);
 
-            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &expected](auto chk){
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
 
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
                 ChunkVerifier *verifier = nullptr;
                 verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-            }, [](auto){FAIL("Chunked reader should not fail");});
+                chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+            }, [](const ErrorCode&){ FAIL("Chunked reader should not fail");});
         }
 
 
@@ -1110,18 +1112,18 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
             auto shd = new sharedinfo(shrd);
 
             auto keepAlive = new boost::asio::io_service::work(ioService);
-            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &expected](auto chk){
+            shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [keepAlive, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
 
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
                 ChunkVerifier *verifier = nullptr;
                 verifier = new ChunkVerifier(numReads, expectedReads, chk, [keepAlive, verifier](){ delete verifier; delete keepAlive;},  expectedBegin, expectedEnd, ioService);
-                chk->next_chunk([verifier](auto ec, auto data){ verifier->readHandler(ec, data);});
-            }, [](auto){
+                chk->next_chunk([verifier](const ErrorCode& ec, Buffer data){ verifier->readHandler(ec, data);});
+            }, [](ErrorCode){
                 FAIL("Make chunked reader should not fail");
             });
         }
-        }, [](auto){FAIL("Append should not fail");});
+        }, [](const ErrorCode&){ FAIL("Append should not fail");});
 
         ioService.run();
     }
@@ -1137,18 +1139,18 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
         int expectedReads = 0;
 
         auto shrd = SwappingBufferOverwrite::make_shared(ioService, mockFilesystem, rootDir);
-        shrd->append(appendContent, [&](auto) {
+        shrd->append(appendContent, [&](uint32_t) {
             Buffer &expected = appendContent;
 
 
             WHEN("The content is retrieved with a readAll, it is correct") {
             auto keepAlive = new boost::asio::io_service::work(ioService);
-                shrd->readAll([keepAlive, &expected](auto totalFile) {
+                shrd->readAll([keepAlive, &expected](Buffer totalFile) {
 
                     REQUIRE((expected.size() == totalFile.size()));
                     REQUIRE((expected == totalFile));
                     delete keepAlive;
-                }, [](auto er) {
+                }, [](const ErrorCode& er) {
                     std::cout << er.what() << std::endl;
                     FAIL("Read operation should not fail on append buffer.");
                 });
@@ -1163,7 +1165,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
 
                     REQUIRE((expected == buf));
                     delete keepAlive;
-                }, [](auto) { FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](ErrorCode) { FAIL("The transactionappendbuffer should be able to write down the data."); });
             }
 
             AND_WHEN("The content is saved with version 80") {
@@ -1175,7 +1177,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
 
                     REQUIRE((expected == buf));
                     delete keepAlive;
-                }, [](auto) { FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](ErrorCode) { FAIL("The transactionappendbuffer should be able to write down the data."); });
             }
 
             AND_WHEN("The content is cleared") {
@@ -1190,7 +1192,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                         Buffer expected{};
                         REQUIRE((expected == buf));
                         delete keepAlive;
-                    }, [](auto te) {
+                    }, [](const ErrorCode& te) {
                         FAIL("The transactionappendbuffer should be able to avoid to write down the data :D");
                     });
                 });
@@ -1205,7 +1207,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                 expectedReads = (expected.size() + chunkSize / 2) / chunkSize;
                 auto shd = new sharedinfo(shrd);
 
-                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
 
                     auto expectedBegin = expected.begin();
                     auto expectedEnd = expected.end();
@@ -1214,8 +1216,8 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                         delete verifier;
                         delete keepAlive;
                     }, expectedBegin, expectedEnd, ioService);
-                    chk->next_chunk([verifier](auto ec, auto data) { verifier->readHandler(ec, data); });
-                }, [](auto){FAIL("Should not fail while making chunked reader");});
+                    chk->next_chunk([verifier](const ErrorCode& ec, Buffer data) { verifier->readHandler(ec, data); });
+                }, [](const ErrorCode&){ FAIL("Should not fail while making chunked reader");});
             }
 
 
@@ -1226,7 +1228,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                 expectedReads = (expected.size() + chunkSize / 2) / chunkSize;
                 auto shd = new sharedinfo(shrd);
 
-                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](auto chk){
+                shrd->make_chunked_stream(std::shared_ptr<sharedinfo>(shd), chunkSize, [&shrd, keepAlive, &numReads, &expectedReads, &expected](std::shared_ptr<ChunkedFstreamInterface> chk){
 
                 auto expectedBegin = expected.begin();
                 auto expectedEnd = expected.end();
@@ -1235,10 +1237,10 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                     delete verifier;
                     delete keepAlive;
                 }, expectedBegin, expectedEnd, ioService);
-                chk->next_chunk([verifier](auto ec, auto data) { verifier->readHandler(ec, data); });
-                }, [](auto){FAIL("Should not fail while making chunked reader");});
+                chk->next_chunk([verifier](const ErrorCode& ec, Buffer data) { verifier->readHandler(ec, data); });
+                }, [](const ErrorCode&){ FAIL("Should not fail while making chunked reader");});
             }
-        }, [&](auto){ FAIL("Should not fail while appending"); });
+        }, [&](ErrorCode){ FAIL("Should not fail while appending"); });
         ioService.run();
     }
 
@@ -1264,11 +1266,11 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
             auto keepAlive = new boost::asio::io_service::work(ioService);
 
             WHEN("The content is retrieved with a readAll, it is correct") {
-                shrd->readAll([keepAlive, &expected](auto totalFile) {
+                shrd->readAll([keepAlive, &expected](Buffer totalFile) {
                     REQUIRE((expected.size() == totalFile.size()));
                     REQUIRE((expected == totalFile));
                     delete keepAlive;
-                }, [](auto er) {
+                }, [](const ErrorCode& er) {
                     std::cout << er.what() << std::endl;
                     FAIL("Read operation should not fail on append buffer.");
                 });
@@ -1281,7 +1283,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
 
                     REQUIRE((expected == buf));
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
             }
 
             AND_WHEN("The content is saved with version 80") {
@@ -1291,7 +1293,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
 
                     REQUIRE((expected == buf));
                     delete keepAlive;
-                }, [](auto){ FAIL("The transactionappendbuffer should be able to write down the data."); });
+                }, [](const ErrorCode&){ FAIL("The transactionappendbuffer should be able to write down the data."); });
             }
             AND_WHEN("The content is cleared") {
                 shrd->clear([shrd, keepAlive](){
@@ -1307,7 +1309,7 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
                             Buffer expected{};
                             REQUIRE( (expected == buf) );
                             delete keepAlive;
-                        }, [](auto te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
+                        }, [](const ErrorCode& te){ FAIL("The transactionappendbuffer should be able to avoid to write down the data :D"); });
                     });
                 });
             }
@@ -1316,13 +1318,13 @@ TEST_CASE("Overwrite Buffer on file that does not exist", "[swapping_buffer][tbo
         appendFunction = [&](size_t size){
             if(size >= appendSize-13) { //reached end!
                 Buffer b{0, 1, 2, 3, 4, 5, 6,7, 8, 9, 10, 11, 12};
-                shrd->append(b, testLambda, [](auto){});
+                shrd->append(b, testLambda, [](uint32_t){});
             } else {
-                shrd->append(appendContent, appendFunction, [](auto te){});
+                shrd->append(appendContent, appendFunction, [](const ErrorCode& te){});
             }
         };
 
-        shrd->append(appendContent, appendFunction, [](auto){}); //appendi ogni volta
+        shrd->append(appendContent, appendFunction, [](ErrorCode){}); //appendi ogni volta
         ioService.run();
     }
 

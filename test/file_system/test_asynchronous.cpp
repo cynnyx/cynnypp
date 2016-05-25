@@ -292,8 +292,9 @@ SCENARIO("Write asynchronously", "[fs_async_write][fs_async][fs]"){
         WHEN("I write two times the buffer to the same path") {
             auto path = working_dir + "/two_times.txt";
             THEN("the size of the written file is equal to the size of one single buffer") {
-                fs.async_write(path, buf, [](auto ec, auto len){});
-                fs.async_write(path, buf, [path, buf_size = buf.size()](auto ec, auto len){
+                fs.async_write(path, buf, [](const ErrorCode& ec, size_t len){});
+                auto buf_size = buf.size();
+                fs.async_write(path, buf, [path, buf_size](const ErrorCode& ec, size_t len){
                     auto size = boost::filesystem::file_size(path);
                     REQUIRE((size == buf_size));
                 });
