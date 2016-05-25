@@ -105,12 +105,14 @@ public:
 
     template<class C>
     void reg(std::shared_ptr<C> &ptr) {
-        Base::reg(details::choice<0, sizeof...(T)>{}, ptr);
+        auto wptr = static_cast<std::weak_ptr<C>>(ptr);
+        Base::reg(details::choice<0, sizeof...(T)>{}, wptr);
     }
 
     template<class C>
     void unreg(std::shared_ptr<C> &ptr) {
-        Base::unreg(details::choice<0, sizeof...(T)>{}, ptr);
+        auto wptr = static_cast<std::weak_ptr<C>>(ptr);
+        Base::unreg(details::choice<0, sizeof...(T)>{}, wptr);
     }
 
     template<class E, class C, void(C::*M)(const E &) = &C::receive>
