@@ -39,7 +39,8 @@ if(${LIBRARY_SHARED})
         ${ASYNC_FS_SOURCES}
         ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/io/locales.cpp
         )
-    target_include_directories(${ASYNC_FS_LIBRARY_SHARED} PRIVATE ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/)
+        
+    target_include_directories(${ASYNC_FS_LIBRARY_SHARED} PRIVATE ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/ PRIVATE ${Boost_INCLUDE_DIRS})
     target_link_libraries(${ASYNC_FS_LIBRARY_SHARED} PRIVATE ${Boost_LIBRARIES})
 
     # set positions independet code flag for shared lib
@@ -62,7 +63,7 @@ if(${LIBRARY_STATIC})
         ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/io/locales.cpp
         )
 
-    target_include_directories(${ASYNC_FS_LIBRARY_STATIC} PRIVATE ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/)
+    target_include_directories(${ASYNC_FS_LIBRARY_STATIC} PRIVATE ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/ PRIVATE ${Boost_INCLUDE_DIRS})
     target_link_libraries(${ASYNC_FS_LIBRARY_STATIC} PRIVATE ${Boost_LIBRARIES})
 
     # set output name and path

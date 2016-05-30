@@ -30,6 +30,7 @@ target_include_directories(
         ${COMMON_TEST_LIBRARY}
         PRIVATE ${CYNNYPP_SRC_DIR}
         PRIVATE ${CYNNYPP_TEST_DIR}
+        PRIVATE ${Boost_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -60,6 +61,7 @@ target_include_directories(
         PRIVATE ${CYNNYPP_SRC_DIR}
         PRIVATE ${CYNNYPP_TEST_DIR}
         PRIVATE ${Catch_INCLUDE_DIRS}
+        PRIVATE ${Boost_INCLUDE_DIRS}
 )
 
 # add test_all to the list of test to be executed by CTest
