@@ -32,8 +32,8 @@ void CacheChunkedReader::next_chunk(filesystem::FilesystemManagerInterface::Read
 
 SwappingBufferOverwriteChunkedReader::SwappingBufferOverwriteChunkedReader(boost::asio::io_service& io,
         filesystem::FilesystemManagerInterface& fs, std::shared_ptr<sharedinfo> i, const filesystem::Path &tmp_path, size_t chunk_size)
-    : io{io}
-    , fs{fs}
+    : io(io)
+    , fs(fs)
     , info(i)
     , path(tmp_path)
     , chunk_size(chunk_size)
@@ -70,8 +70,8 @@ SwappingBufferAppendChunkedReader::SwappingBufferAppendChunkedReader(boost::asio
                                                                            const filesystem::Path &path,
                                                                            const filesystem::Path &tmp_path,
                                                                            size_t chunk_size)
-    : io{io}
-    , fs{fs}
+    : io(io)
+    , fs(fs)
     , info(i)
     , path(path)
     , tmp_path(tmp_path)

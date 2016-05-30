@@ -32,7 +32,7 @@ public:
      *
      */
     CacheChunkedReader(boost::asio::io_service& io, filesystem::FilesystemManagerInterface& fs, std::shared_ptr<sharedinfo> i, size_t chunk_size=1024)
-        : io{io}
+        : io(io)
         , pos(0)
         , info(i)
         , chunk_size(chunk_size){}

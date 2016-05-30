@@ -55,7 +55,7 @@ private:
 class MockChunkedInterface : public ChunkedFstreamInterface {
 public:
 
-    MockChunkedInterface(boost::asio::io_service& io, const Path &p, Buffer b, size_t chunk_size) : io{io}, path(p), file(b), chunk(chunk_size) {
+    MockChunkedInterface(boost::asio::io_service& io, const Path &p, Buffer b, size_t chunk_size) : io(io), path(p), file(b), chunk(chunk_size) {
     }
 
     ~MockChunkedInterface() override = default;
@@ -73,8 +73,8 @@ private:
 class MockFilesystem : public  FilesystemManagerInterface{
 public:
     MockFilesystem(boost::asio::io_service& io)
-        : io{io}
-        , timerManager{io}
+        : io(io)
+        , timerManager(io)
     {}
 
     bool exists(const Path& p)override;

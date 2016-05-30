@@ -9,7 +9,7 @@ using cynny::cynnypp::filesystem::ErrorCode;
 struct ChunkVerifier {
     ChunkVerifier(int &numReads, int expectedReads, std::shared_ptr<ChunkedFstreamInterface> chk, std::function<void()> onEnd,
                   Buffer::iterator &begin, Buffer::iterator &end, boost::asio::io_service& io) :
-                    numReads(numReads), expectedReads(expectedReads), chk(chk), onEnd(onEnd), begin(begin), end(end), io{io}{
+                    numReads(numReads), expectedReads(expectedReads), chk(chk), onEnd(onEnd), begin(begin), end(end), io(io){
 
     }
 

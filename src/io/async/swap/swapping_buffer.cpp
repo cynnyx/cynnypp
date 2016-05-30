@@ -20,9 +20,9 @@ std::string calculateTmpPath(const std::string& root_dir, uint64_t id) {
 
 
 SwappingBuffer::SwappingBuffer(boost::asio::io_service& io, filesystem::FilesystemManagerInterface& fs, const std::string& root_dir)
-    : io{io}
-    , fs{fs}
-    , root_dir{root_dir}
+    : io(io)
+    , fs(fs)
+    , root_dir(root_dir)
     , tmp_path(calculateTmpPath(root_dir, currentTransactionId))
 {
     //use consecutive filenames to represent sessions. we are sure there will be no collisions
