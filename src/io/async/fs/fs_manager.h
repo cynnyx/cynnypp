@@ -396,6 +396,7 @@ public:
      * @param chunk_size
      * @return
      *
+     * \throws filesystem:ErrorCode if the p is not the path to an existent regular file
      * \throws May throw std::bad_alloc or any other exception thrown by the constructor of T. If an exception is thrown, this function has no effect.
      * \throws std::invalid_argument in case the chunk size is 0.
      */

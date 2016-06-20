@@ -503,7 +503,7 @@ std::shared_ptr<ChunkedFstreamInterface> FilesystemManager::make_chunked_stream(
     check_path_admitted<file_type::regular_file>(p);
 
     if(chunk_size == 0)
-        throw ErrorCode(ErrorCode::invalid_argument, "[ERROR] FilesystemManager: can only read in chunks of size > 0.");
+        throw std::invalid_argument("[ERROR] FilesystemManager: can only read in chunks of size > 0.");
 
     // workaround that enable to keep DownloadActivity's constructor protected (see http://stackoverflow.com/a/25069711/2508150)
     struct make_shared_enabler : ChunkedFstream { make_shared_enabler(FilesystemManager& fs, std::shared_ptr<impl::ChunkedReader> r) : ChunkedFstream(fs, r) {} };
