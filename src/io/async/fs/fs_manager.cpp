@@ -628,9 +628,10 @@ void FilesystemManager::OperationsQueue::push_write(const Path &path, const Buff
 }
 
 void FilesystemManager::OperationsQueue::push_append(const Path &path, const Buffer &buf, FilesystemManager::CompletionHandler h) {
+    std::lock_guard<std::mutex> lck{mtx};
     q_operations.emplace(OperationCode::async_append, std::move(h));
     q_write_data.emplace(path, buf);
-};
+}
 
 void FilesystemManager::OperationsQueue::push_chunked_read(std::shared_ptr<ChunkedReader> r, size_t pos, HotDoubleBuffer::BufferView &buf, FilesystemManager::CompletionHandler h)
 {
