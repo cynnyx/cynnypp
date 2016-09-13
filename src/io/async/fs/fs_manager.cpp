@@ -544,7 +544,7 @@ void ChunkedReader::next_chunk(ReadChunkHandler h)
         assert(q_buf_ready.front().is_hot());
         Buffer buf_copy{static_cast<const Buffer &>(q_buf_ready.front())};
         q_buf_ready.front().set_hot(false);
-        h(q_buf_ready.front().error_code(), std::move(buf_copy));
+        fs_manager.get_io_service().post(std::bind(std::move(h), q_buf_ready.front().error_code(), std::move(buf_copy)));
         q_buf_ready.pop();
     }
     else {
