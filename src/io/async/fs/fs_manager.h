@@ -497,9 +497,8 @@ public:
     void next_chunk(FilesystemManager::ReadChunkHandler h) override;
 
 protected:
-    ChunkedFstream(FilesystemManager& fs, std::shared_ptr<impl::ChunkedReader> r) : fs{fs}, reader{r} {}
+    ChunkedFstream(std::shared_ptr<impl::ChunkedReader> r) : reader{r} {}
 private:
-    std::reference_wrapper<FilesystemManager> fs;
     std::shared_ptr<impl::ChunkedReader> reader;
 };
 
