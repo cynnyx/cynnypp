@@ -374,7 +374,7 @@ public:
      * \param h - the completion handler to be called on termination of the append operation.
      *
      */
-    virtual void async_append(const Path &p, const Buffer &buf, FilesystemManagerInterface::CompletionHandler h) override;
+    void async_append(const Path &p, const Buffer &buf, FilesystemManagerInterface::CompletionHandler h) override;
 
 
     /** Reads a chunk asynchronously, using a chunked reader
@@ -383,7 +383,7 @@ public:
      * \param buf the buffer to be used to save the data
      * \param h the completion handler to be called on read termination.
      */
-    void async_read_chunk(std::shared_ptr<impl::ChunkedReader> r, size_t pos, impl::HotDoubleBuffer::BufferView& buf, CompletionHandler h)
+    virtual void async_read_chunk(std::shared_ptr<impl::ChunkedReader> r, size_t pos, impl::HotDoubleBuffer::BufferView& buf, CompletionHandler h)
     {
         // enque a read request to the waiting queue
         q_.push_chunked_read(r, pos, buf, h);
