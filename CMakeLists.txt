@@ -155,6 +155,7 @@ set(TARGET_DOCS docs)
 
 add_subdirectory(${PROJECT_SRC_DIR})
 
+
 if(${Catch_FOUND})
     add_subdirectory(${PROJECT_TEST_DIR})
 endif(  ${Catch_FOUND})
