@@ -226,14 +226,30 @@ bool createDirectory(const Path &p, bool parents)
 
 // --------------------- file access --------------
 
+Buffer readFile(std::unique_ptr<std::basic_ifstream<uint8_t>> in)
+{
+
+    Buffer ret;
+    ret.resize(in->tellg());
+    in->seekg(0);
+    in->imbue(utilities_locale);
+    in->read(ret.data(), ret.size());
+
+    if (!in) {
+        std::ostringstream msg(__func__);
+        msg << " was not able to read from file descriptor after reading " << in->gcount() << " characters";
+        throw (ErrorCode(ErrorCode::read_failure, msg.str()));
+    }
+
+    return ret;
+}
 Buffer readFile(const Path& p)
 {
     // check and throw if needed
     check_path_admitted<file_type::regular_file>(p);
 
     std::basic_ifstream<uint8_t> in(p, std::ios::in | std::ios::binary | std::ios::ate);
-    if (!in)
-        throw(ErrorCode(ErrorCode::open_failure, std::string{__func__} + " was not able to open the file " + p + " in read mode"));
+    if (!in) throw(ErrorCode(ErrorCode::open_failure, std::string{__func__} + " was not able to open the file " + p + " in read mode"));
 
     Buffer ret;
     ret.resize(in.tellg());
@@ -243,11 +259,12 @@ Buffer readFile(const Path& p)
 
     if (!in) {
         std::ostringstream msg(__func__);
-        msg << " was not able to read from file " << p << " after reading " << in.gcount() << " characters";
+        msg << " was not able to read from file descriptor after reading " << in.gcount() << " characters";
         throw (ErrorCode(ErrorCode::read_failure, msg.str()));
     }
 
     return ret;
+
 }
 
 
@@ -369,6 +386,11 @@ void FilesystemManager::async_read(const Path& p, Buffer& buf, CompletionHandler
     available_.set_event();
 }
 
+void FilesystemManager::async_read(std::unique_ptr<std::basic_ifstream<uint8_t>> fd, Buffer& buf, CompletionHandler h)
+{
+    q_.push_fd_read(std::move(fd), buf, std::move(h));
+    available_.set_event();
+}
 
 void FilesystemManager::async_write(const Path& p, const Buffer& buf, CompletionHandler h)
 {
@@ -481,8 +503,17 @@ void FilesystemManager::perform_next_operation()
             buf.set_hot(true);
             ec = buf.error_code() = (buf.size() == size_to_read) & !reader->eof() ? ErrorCode::success : ErrorCode::end_of_file;
             size = buf.size();
-        }
-            break;
+        } break;
+        case OperationCode::fd_async_read: {
+            std::tuple<OperationCode, std::unique_ptr<std::basic_ifstream<uint8_t>> &&, std::reference_wrapper<Buffer>,CompletionHandler> t = q_.pop_fd_read();
+            std::reference_wrapper<Buffer> tmp = std::get<2>(t);
+            auto &buf = tmp.get();
+            h = std::move(std::get<3>(t));
+            buf = filesystem::readFile(std::move(std::get<1>(t)));
+            ec = ErrorCode::success;
+            size = buf.size();
+        } break;
+
         default:
             assert(0);
             break;
@@ -601,7 +632,7 @@ Buffer ChunkedReader::read_file_chunk(HotDoubleBuffer::BufferView &buf, size_t c
 {
     if (!is)
         // NOTE: error code rather arbitrary... can we find a better code?
-        throw(ErrorCode(ErrorCode::read_failure, std::string{__func__} + ": the stream supplied wai in fail state\n"));
+        throw(ErrorCode(ErrorCode::read_failure, std::string{__func__} + ": the stream supplied was in fail state\n"));
 
     buf.resize(chunk_size);
     is.seekg(pos);
@@ -618,6 +649,13 @@ void FilesystemManager::OperationsQueue::push_read(const Path &path, Buffer &buf
     std::lock_guard<std::mutex> lck{mtx};
     q_operations.emplace(OperationCode::async_read, std::move(h));
     q_read_data.emplace(path, buf);
+}
+
+void FilesystemManager::OperationsQueue::push_fd_read(std::unique_ptr<std::basic_ifstream<uint8_t>> in, Buffer&buf, FilesystemManager::CompletionHandler h)
+{
+    std::lock_guard<std::mutex> lck{mtx};
+    q_operations.emplace(OperationCode::fd_async_read, std::move(h));
+    q_fd_read_data.emplace(std::move(in), buf);
 }
 
 void FilesystemManager::OperationsQueue::push_write(const Path &path, const Buffer &buf, FilesystemManager::CompletionHandler h)
@@ -649,6 +687,17 @@ std::tuple<FilesystemManager::OperationCode,const Path,std::reference_wrapper<Bu
     std::tuple<const Path,std::reference_wrapper<Buffer>> path_buf = std::move(q_read_data.front());
     q_read_data.pop();
     return std::make_tuple(op.first, std::move(get<0>(path_buf)), get<1>(path_buf), std::move(op.second));
+}
+
+std::tuple<FilesystemManager::OperationCode, std::unique_ptr<std::basic_ifstream<uint8_t>>, std::reference_wrapper<Buffer>,FilesystemManager::CompletionHandler> FilesystemManager::OperationsQueue::pop_fd_read()
+{
+    using std::get;
+    std::lock_guard<std::mutex> lck{mtx};
+    auto op = std::move(q_operations.front());
+    q_operations.pop();
+    std::tuple<std::unique_ptr<std::basic_ifstream<uint8_t>>, std::reference_wrapper<Buffer>> path_buf = std::move(q_fd_read_data.front());
+    q_fd_read_data.pop();
+    return std::make_tuple(op.first, std::move(get<0>(path_buf)), std::move(get<1>(path_buf)), std::move(op.second));
 }
 
 std::tuple<FilesystemManager::OperationCode,const Path, std::reference_wrapper<const Buffer>,FilesystemManager::CompletionHandler> FilesystemManager::OperationsQueue::pop_write()

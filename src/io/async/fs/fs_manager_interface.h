@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <vector>
 #include <sstream>
+#include <fstream>
 #include "utilities/event.h"
 
 namespace cynny {
@@ -233,6 +234,10 @@ public:
      */
 
     virtual void async_read(const Path &p, Buffer &buf, CompletionHandler h)=0;
+
+
+
+    virtual void async_read(std::unique_ptr<std::basic_ifstream<uint8_t>> fd, Buffer& buf, CompletionHandler h)=0;
 
     /**
      * Register an asynch write request to the fs manager.

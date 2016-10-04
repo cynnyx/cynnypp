@@ -349,6 +349,9 @@ public:
      */
     void async_read(const Path& p, Buffer& buf, CompletionHandler h) override;
 
+
+
+    void async_read(std::unique_ptr<std::basic_ifstream<uint8_t>> fd, Buffer& buf, CompletionHandler h) override;
     /**
      * Register an asynch write request to the fs manager.
      *
@@ -405,7 +408,7 @@ public:
 
 private:
     enum class OperationCode {
-        async_read, async_write, async_read_chunk, async_append
+        async_read, async_write, async_read_chunk, async_append, fd_async_read
     };
 
     /**
@@ -448,11 +451,13 @@ private:
         size_t size() const { std::lock_guard<std::mutex> lck{mtx}; return q_operations.size(); }
 
         void push_read(const Path& path, Buffer& buf, CompletionHandler h);
+        void push_fd_read(std::unique_ptr<std::basic_ifstream<uint8_t>> in, Buffer&buf, CompletionHandler h);
         void push_write(const Path& path, const Buffer& buf, CompletionHandler h);
         void push_append(const Path& path, const Buffer& buf, CompletionHandler h);
         void push_chunked_read(std::shared_ptr<impl::ChunkedReader> r, size_t pos, impl::HotDoubleBuffer::BufferView& buf, CompletionHandler h);
 
         std::tuple<OperationCode,const Path,std::reference_wrapper<Buffer>,CompletionHandler> pop_read();
+        std::tuple<OperationCode, std::unique_ptr<std::basic_ifstream<uint8_t>>, std::reference_wrapper<Buffer>,CompletionHandler> pop_fd_read();
         std::tuple<OperationCode,const Path,std::reference_wrapper<const Buffer>,CompletionHandler> pop_write();
         std::tuple<OperationCode,std::shared_ptr<impl::ChunkedReader>,size_t,impl::HotDoubleBuffer::BufferView,CompletionHandler> pop_chunked_read();
 
@@ -462,6 +467,7 @@ private:
         std::queue<std::pair<OperationCode,CompletionHandler>> q_operations;
         std::queue<std::tuple<const Path,std::reference_wrapper<const Buffer>>> q_write_data;
         std::queue<std::tuple<const Path,std::reference_wrapper<Buffer>>> q_read_data;
+        std::queue<std::tuple<std::unique_ptr<std::basic_ifstream<uint8_t>>, std::reference_wrapper<Buffer>>> q_fd_read_data;
         std::queue<std::tuple<std::shared_ptr<impl::ChunkedReader>,size_t,impl::HotDoubleBuffer::BufferView>> q_as_read_data;
         mutable std::mutex mtx;
     };
