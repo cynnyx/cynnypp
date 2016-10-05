@@ -505,7 +505,7 @@ void FilesystemManager::perform_next_operation()
             size = buf.size();
         } break;
         case OperationCode::fd_async_read: {
-            std::tuple<OperationCode, std::unique_ptr<std::basic_ifstream<uint8_t>> &&, std::reference_wrapper<Buffer>,CompletionHandler> t = q_.pop_fd_read();
+            std::tuple<OperationCode, std::unique_ptr<std::basic_ifstream<uint8_t>>, std::reference_wrapper<Buffer>,CompletionHandler> t = q_.pop_fd_read();
             std::reference_wrapper<Buffer> tmp = std::get<2>(t);
             auto &buf = tmp.get();
             h = std::move(std::get<3>(t));
