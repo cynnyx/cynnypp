@@ -20,14 +20,21 @@ public:
 	static_assert(k > 0, "Number of hash functions used cannot be 0");
 	static_assert(bits_per_element == 2 || bits_per_element == 4 || bits_per_element == 8, "Number of bits per element must be a power of 2.");
 
+    using local_array = std::array<uint8_t, (m*bits_per_element+7)/8>;
 	/** \brief Creates a new counting bloom filter giving explicitly a list of std::function to use as hashes, through an initialzier list
 	 * \param hashes the hash functions passed in input (initializer list)
 	 * \param bf_serialized a starting bloom filter (default: empty)
 	 *
 	 */
-	CountingBloomFilter(std::initializer_list<std::function<size_t(const ElementType &)>> hashes, std::array<uint8_t, (m*bits_per_element+7)/8> bf_serialized = std::array<uint8_t, (m*bits_per_element+7)/8>{}) : bf(bf_serialized) {
+	CountingBloomFilter(std::initializer_list<std::function<size_t(const ElementType &)>> hashes) : _memory{ new std::array<uint8_t, (m*bits_per_element+7)/8>()}, bf(*_memory){
 		addHashes(hashes);
 	};
+
+
+    CountingBloomFilter(std::initializer_list<std::function<size_t(const ElementType &)>> hashes, std::array<uint8_t, (m*bits_per_element+7)/8> other)  : _memory{ new std::array<uint8_t, (m*bits_per_element+7)/8>()}, bf(*_memory) {
+        std::copy(other.begin(), other.end(), bf.begin());
+        addHashes(hashes);
+    }
 
 	template<typename T>
 	void set(T&& element) {
@@ -82,15 +89,16 @@ public:
 	}
 
 
-	CountingBloomFilter(const CountingBloomFilter &obj) {
-		bf = obj.bf;
+    CountingBloomFilter(const CountingBloomFilter &obj) : _memory{new local_array}, bf(*_memory)
+    {
+        std::copy(obj.bf.begin(), obj.bf.end(), bf.begin());
 		hash_functions = obj.hash_functions;
 	}
 
 
 
 	/** Move constructor */
-	CountingBloomFilter(CountingBloomFilter && obj) : CountingBloomFilter() {
+	CountingBloomFilter(CountingBloomFilter && obj) : bf(obj.bf) {
 		swap(*this, obj);
 	}
 
@@ -169,8 +177,10 @@ private:
 		}
 	}
 
-	//array taking the count of the stuff.
-	std::array<uint8_t, (m*bits_per_element+7)/8> bf;
+	std::array<uint8_t, (m*bits_per_element+7)/8> *_memory;
+	//reference to array taking the count of the stuff.
+	std::array<uint8_t, (m*bits_per_element+7)/8> &bf;
+
 	//array of hash functions.
 	std::array<std::function<size_t(const ElementType &)>, k> hash_functions;
 
