@@ -78,7 +78,7 @@ static boost::filesystem::file_status check_path_admitted(const boost::filesyste
 bool exists(const Path& p)
 {
     // check and throw if needed
-    auto status = check_path_admitted<file_type::file_not_found,file_type::regular_file,file_type::directory_file>(p);
+    auto status = check_path_admitted<file_type::file_not_found,file_type::regular_file,file_type::directory_file, file_type::symlink_file>(p);
     try {
         return boost::filesystem::exists(status);
     }
@@ -246,7 +246,7 @@ Buffer readFile(std::unique_ptr<std::basic_ifstream<uint8_t>> in)
 Buffer readFile(const Path& p)
 {
     // check and throw if needed
-    check_path_admitted<file_type::regular_file>(p);
+    check_path_admitted<file_type::regular_file, file_type::symlink_file>(p);
 
     std::basic_ifstream<uint8_t> in(p, std::ios::in | std::ios::binary | std::ios::ate);
     if (!in) throw(ErrorCode(ErrorCode::open_failure, std::string{__func__} + " was not able to open the file " + p + " in read mode"));

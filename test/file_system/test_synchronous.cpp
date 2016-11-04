@@ -20,7 +20,7 @@ TEST_CASE("Exist on different files", "[fs_exists][fs]") {
     REQUIRE(fsm.exists(input_dir+"/exists/not_exist") == false); //false
     REQUIRE(fsm.exists(input_dir+"/exists/exists") == true); //true
     REQUIRE(fsm.exists(input_dir+"/exists/normalfile") == true);
-    REQUIRE_THROWS(fsm.exists(input_dir+"/exists/linkfile"));
+    REQUIRE(fsm.exists(input_dir+"/exists/linkfile"));
     //REQUIRE_THROWS(fsm.exists(input_dir+"/exists/specialfile"));
     REQUIRE(fsm.exists(input_dir+"/exists/*/sub") == false);
     REQUIRE(fsm.exists(input_dir+"/exists/file_with_no_read_permissions") == false);
@@ -70,7 +70,7 @@ TEST_CASE("Reading different files", "[fs_read][fs]")  {
     for(uint8_t i = 0; i < 39; i++) {r2.push_back(i);}
     REQUIRE(fsm.readFile(input_dir+"/read/invisiblechars") == r2);
     REQUIRE_THROWS(fsm.readFile(input_dir+"/read/dir/"));
-    REQUIRE_THROWS(fsm.readFile(input_dir+"/read/linktomultiplea"));
+    REQUIRE(fsm.readFile(input_dir+"/read/linktomultiplea") == r1);
     REQUIRE_THROWS(fsm.readFile(input_dir+"/read/dir/specialfile"));
     REQUIRE(fsm.readFile(input_dir+"/read/hugefile").size() == boost::filesystem::file_size(input_dir+"/read/hugefile"));
     REQUIRE_THROWS(fsm.readFile(""));
