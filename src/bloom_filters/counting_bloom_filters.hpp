@@ -100,11 +100,13 @@ public:
 	/** Move constructor */
 	CountingBloomFilter(CountingBloomFilter && obj) : bf(obj.bf) {
 		swap(*this, obj);
+		obj._memory = nullptr;
 	}
 
 	/** Assignment operator */
 	CountingBloomFilter & operator=(CountingBloomFilter r) {
 		swap(*this, r);
+		r._memory = nullptr;
 		return *this;
 	}
 
@@ -151,7 +153,8 @@ public:
 
 
 	~CountingBloomFilter(){
-		delete _memory; 
+		delete _memory;
+		_memory = nullptr;
 	};
 
 private:
@@ -179,7 +182,7 @@ private:
 		}
 	}
 
-	std::array<uint8_t, (m*bits_per_element+7)/8> *_memory;
+	std::array<uint8_t, (m*bits_per_element+7)/8> *_memory{nullptr};
 	//reference to array taking the count of the stuff.
 	std::array<uint8_t, (m*bits_per_element+7)/8> &bf;
 
