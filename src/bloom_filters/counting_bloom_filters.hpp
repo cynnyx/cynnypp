@@ -150,7 +150,9 @@ public:
 	}
 
 
-	~CountingBloomFilter() = default;
+	~CountingBloomFilter(){
+		delete _memory; 
+	};
 
 private:
 
