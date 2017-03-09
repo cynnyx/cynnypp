@@ -7,8 +7,10 @@
 #include <iostream>
 #include <cassert>
 
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC push_options
 #pragma GCC optimize ("unroll-loops")
+#endif
 
 namespace cynny {
 namespace cynnypp {
